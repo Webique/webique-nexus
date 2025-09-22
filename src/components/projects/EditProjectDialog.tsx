@@ -31,13 +31,18 @@ import { Project } from "@/types/project";
 const projectSchema = z.object({
   name: z.string().min(1, "Project name is required"),
   phoneNumber: z.string().min(1, "Phone number is required"),
+  notes: z.string().optional(),
   instagram: z.string().optional(),
   websiteLink: z.string().optional(),
-  totalAmount: z.number().min(0, "Total amount must be positive"),
-  deadline: z.string().min(1, "Deadline is required"),
-  domainCost: z.number().min(0, "Domain cost must be positive"),
-  additionalCosts: z.number().min(0, "Additional costs must be positive"),
-  label: z.enum(['In-House', 'Freelancer']),
+  totalAmount: z.number().min(0).optional(),
+  amountReceived: z.number().min(0).optional(),
+  finishedDate: z.string().optional(),
+  domainCost: z.number().min(0).optional(),
+  additionalCosts: z.number().min(0).optional(),
+  additionalCostReason: z.string().optional(),
+  freelancerManagerFees: z.number().min(0).optional(),
+  freelancerFees: z.number().min(0).optional(),
+  label: z.enum(['In-House', 'Freelancer']).optional(),
 });
 
 type ProjectFormData = z.infer<typeof projectSchema>;
@@ -52,17 +57,29 @@ export function EditProjectDialog({ project, open, onOpenChange }: EditProjectDi
   const { updateProject } = useProjects();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'SAR'
+    }).format(amount);
+  };
+
   const form = useForm<ProjectFormData>({
     resolver: zodResolver(projectSchema),
     defaultValues: {
       name: project.name,
       phoneNumber: project.phoneNumber,
+      notes: project.notes || "",
       instagram: project.instagram || "",
       websiteLink: project.websiteLink || "",
-      totalAmount: project.totalAmount,
-      deadline: project.deadline.split('T')[0], // Format for date input
-      domainCost: project.domainCost,
-      additionalCosts: project.additionalCosts,
+      totalAmount: project.totalAmount || undefined,
+      amountReceived: project.amountReceived || undefined,
+      finishedDate: project.finishedDate || "",
+      domainCost: project.domainCost || undefined,
+      additionalCosts: project.additionalCosts || undefined,
+      additionalCostReason: project.additionalCostReason || "",
+      freelancerManagerFees: project.freelancerManagerFees || undefined,
+      freelancerFees: project.freelancerFees || undefined,
       label: project.label,
     },
   });
@@ -70,7 +87,18 @@ export function EditProjectDialog({ project, open, onOpenChange }: EditProjectDi
   const onSubmit = async (data: ProjectFormData) => {
     setIsSubmitting(true);
     try {
-      updateProject(project.id, data);
+      const totalAmount = data.totalAmount || 0;
+      const amountReceived = data.amountReceived || 0;
+      const remainingAmount = totalAmount - amountReceived;
+
+      const updatedData = {
+        ...data,
+        totalAmount: totalAmount,
+        amountReceived: amountReceived,
+        remainingAmount: remainingAmount,
+      };
+
+      updateProject(project.id, updatedData);
       onOpenChange(false);
     } catch (error) {
       console.error('Error updating project:', error);
@@ -81,20 +109,20 @@ export function EditProjectDialog({ project, open, onOpenChange }: EditProjectDi
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] bg-card border-border">
+      <DialogContent className="sm:max-w-[600px] max-w-[95vw] bg-card border-border p-6">
         <DialogHeader>
           <DialogTitle className="text-foreground">Edit Project</DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 max-h-[80vh] overflow-y-auto">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Project Name</FormLabel>
+                    <FormLabel>Project Name *</FormLabel>
                     <FormControl>
                       <Input {...field} className="bg-input" />
                     </FormControl>
@@ -108,7 +136,7 @@ export function EditProjectDialog({ project, open, onOpenChange }: EditProjectDi
                 name="phoneNumber"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Phone Number</FormLabel>
+                    <FormLabel>Phone Number *</FormLabel>
                     <FormControl>
                       <Input {...field} className="bg-input" />
                     </FormControl>
@@ -118,7 +146,26 @@ export function EditProjectDialog({ project, open, onOpenChange }: EditProjectDi
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            {/* Project Notes */}
+            <FormField
+              control={form.control}
+              name="notes"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Project Notes (Optional)</FormLabel>
+                  <FormControl>
+                    <Input 
+                      {...field} 
+                      className="bg-input" 
+                      placeholder="Brief description of the project..."
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="instagram"
@@ -148,19 +195,23 @@ export function EditProjectDialog({ project, open, onOpenChange }: EditProjectDi
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="totalAmount"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Total Amount ($)</FormLabel>
+                    <FormLabel>Total Amount (SAR) (Optional)</FormLabel>
                     <FormControl>
                       <Input 
                         type="number" 
                         {...field} 
-                        onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                        value={field.value || ""}
+                        onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : 0)}
                         className="bg-input" 
+                        placeholder="0"
+                        min="0"
+                        step="0.01"
                       />
                     </FormControl>
                     <FormMessage />
@@ -170,10 +221,49 @@ export function EditProjectDialog({ project, open, onOpenChange }: EditProjectDi
 
               <FormField
                 control={form.control}
-                name="deadline"
+                name="amountReceived"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Deadline</FormLabel>
+                    <FormLabel>Amount Received (SAR) (Optional)</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="number" 
+                        {...field} 
+                        value={field.value || ""}
+                        onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : 0)}
+                        className="bg-input" 
+                        placeholder="0"
+                        min="0"
+                        step="0.01"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {/* Remaining Amount Preview */}
+            <div className="bg-muted/50 rounded-lg p-3 border border-border">
+              <div className="flex justify-between items-center">
+                <span className="text-sm font-medium text-muted-foreground">Remaining Amount:</span>
+                <span className={`font-semibold ${
+                  ((form.watch("totalAmount") || 0) - (form.watch("amountReceived") || 0)) > 0 
+                    ? 'text-warning' 
+                    : 'text-success'
+                }`}>
+                  {formatCurrency((form.watch("totalAmount") || 0) - (form.watch("amountReceived") || 0))}
+                </span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="finishedDate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Project Finished Date (Optional)</FormLabel>
                     <FormControl>
                       <Input type="date" {...field} className="bg-input" />
                     </FormControl>
@@ -183,19 +273,22 @@ export function EditProjectDialog({ project, open, onOpenChange }: EditProjectDi
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="domainCost"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Domain Cost ($)</FormLabel>
+                    <FormLabel>Domain Cost (SAR) (Optional)</FormLabel>
                     <FormControl>
                       <Input 
                         type="number" 
                         {...field} 
-                        onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                        onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
                         className="bg-input" 
+                        placeholder="0"
+                        min="0"
+                        step="0.01"
                       />
                     </FormControl>
                     <FormMessage />
@@ -208,13 +301,16 @@ export function EditProjectDialog({ project, open, onOpenChange }: EditProjectDi
                 name="additionalCosts"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Additional Costs ($)</FormLabel>
+                    <FormLabel>Additional Costs (SAR) (Optional)</FormLabel>
                     <FormControl>
                       <Input 
                         type="number" 
                         {...field} 
-                        onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                        onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
                         className="bg-input" 
+                        placeholder="0"
+                        min="0"
+                        step="0.01"
                       />
                     </FormControl>
                     <FormMessage />
@@ -223,12 +319,86 @@ export function EditProjectDialog({ project, open, onOpenChange }: EditProjectDi
               />
             </div>
 
+            {/* Additional Cost Reason */}
+            <FormField
+              control={form.control}
+              name="additionalCostReason"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Additional Cost Reason (Optional)</FormLabel>
+                  <FormControl>
+                    <Input 
+                      {...field} 
+                      className="bg-input" 
+                      placeholder="e.g., Extra features, design changes, etc."
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Freelancer Fields - Only show when label is Freelancer */}
+            {form.watch("label") === "Freelancer" && (
+              <div className="space-y-4">
+                <div className="border-t pt-4">
+                  <h3 className="text-sm font-medium text-muted-foreground mb-4">Freelancer Costs</h3>
+                </div>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="freelancerManagerFees"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Manager Fees (SAR)</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number" 
+                            {...field} 
+                            onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
+                            className="bg-input" 
+                            placeholder="0"
+                            min="0"
+                            step="0.01"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="freelancerFees"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Freelancer Fees (SAR)</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number" 
+                            {...field} 
+                            onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
+                            className="bg-input" 
+                            placeholder="0"
+                            min="0"
+                            step="0.01"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+            )}
+
             <FormField
               control={form.control}
               name="label"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Project Label</FormLabel>
+                  <FormLabel>Project Label (Optional)</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger className="bg-input">

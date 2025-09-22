@@ -12,6 +12,16 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { AddProjectDialog } from "@/components/projects/AddProjectDialog";
 import { EditProjectDialog } from "@/components/projects/EditProjectDialog";
 import { Project } from "@/types/project";
@@ -20,13 +30,14 @@ const ActiveProjects = () => {
   const { getActiveProjects, completeProject, deleteProject } = useProjects();
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
+  const [deletingProject, setDeletingProject] = useState<Project | null>(null);
   
   const activeProjects = getActiveProjects();
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'USD'
+      currency: 'SAR'
     }).format(amount);
   };
 
@@ -42,8 +53,15 @@ const ActiveProjects = () => {
     completeProject(id);
   };
 
-  const handleDeleteProject = (id: string) => {
-    deleteProject(id);
+  const handleDeleteProject = (project: Project) => {
+    setDeletingProject(project);
+  };
+
+  const confirmDelete = () => {
+    if (deletingProject) {
+      deleteProject(deletingProject.id);
+      setDeletingProject(null);
+    }
   };
 
   return (
@@ -84,7 +102,7 @@ const ActiveProjects = () => {
             <div>
               <p className="text-muted-foreground text-sm">Total Value</p>
               <p className="text-2xl font-bold text-foreground">
-                {formatCurrency(activeProjects.reduce((sum, project) => sum + project.totalAmount, 0))}
+                {formatCurrency(activeProjects.reduce((sum, project) => sum + (project.totalAmount || 0), 0))}
               </p>
             </div>
             <div className="w-12 h-12 rounded-lg bg-success/10 flex items-center justify-center">
@@ -134,8 +152,10 @@ const ActiveProjects = () => {
                     <TableHead>Phone Number</TableHead>
                     <TableHead>Instagram</TableHead>
                     <TableHead>Website</TableHead>
-                    <TableHead>Amount</TableHead>
-                    <TableHead>Deadline</TableHead>
+                    <TableHead>Total Amount</TableHead>
+                    <TableHead>Received</TableHead>
+                    <TableHead>Remaining</TableHead>
+                    <TableHead>Completed Date</TableHead>
                     <TableHead>Label</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
@@ -171,8 +191,12 @@ const ActiveProjects = () => {
                           </a>
                         )}
                       </TableCell>
-                      <TableCell>{formatCurrency(project.totalAmount)}</TableCell>
-                      <TableCell>{formatDate(project.deadline)}</TableCell>
+                      <TableCell className="font-medium">{formatCurrency(project.totalAmount || 0)}</TableCell>
+                      <TableCell className="text-primary">{formatCurrency(project.amountReceived || 0)}</TableCell>
+                      <TableCell className={`font-medium ${(project.remainingAmount || 0) > 0 ? 'text-warning' : 'text-success'}`}>
+                        {formatCurrency(project.remainingAmount || 0)}
+                      </TableCell>
+                      <TableCell>{project.finishedDate ? formatDate(project.finishedDate) : 'Not completed yet'}</TableCell>
                       <TableCell>
                         <Badge variant={getLabelVariant(project.label)}>
                           {project.label}
@@ -199,7 +223,7 @@ const ActiveProjects = () => {
                           <Button
                             size="sm"
                             variant="ghost"
-                            onClick={() => handleDeleteProject(project.id)}
+                            onClick={() => handleDeleteProject(project)}
                             className="hover:bg-destructive/10 hover:text-destructive"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -228,6 +252,27 @@ const ActiveProjects = () => {
           onOpenChange={(open) => !open && setEditingProject(null)} 
         />
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!deletingProject} onOpenChange={(open) => !open && setDeletingProject(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Project</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{deletingProject?.name}"? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

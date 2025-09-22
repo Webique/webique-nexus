@@ -66,7 +66,11 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const project = projects.find(p => p.id === id);
     setProjects(prev => prev.map(project => 
       project.id === id 
-        ? { ...project, status: 'completed' as const, finishedDate: new Date().toISOString() }
+        ? { 
+            ...project, 
+            status: 'completed' as const, 
+            finishedDate: project.finishedDate || new Date().toISOString() 
+          }
         : project
     ));
     toast({
@@ -84,19 +88,21 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }, [projects]);
 
   const getFinanceOverview = useCallback((): FinanceOverview => {
-    const totalRevenue = projects.reduce((sum, project) => sum + project.totalAmount, 0);
-    const totalCosts = projects.reduce((sum, project) => sum + project.domainCost + project.additionalCosts, 0);
-    const totalProfit = totalRevenue - totalCosts;
+    const totalRevenue = projects.reduce((sum, project) => sum + (project.totalAmount || 0), 0);
+    const totalAmountReceived = projects.reduce((sum, project) => sum + (project.amountReceived || 0), 0);
+    const totalRemainingAmount = projects.reduce((sum, project) => sum + (project.remainingAmount || 0), 0);
+    const totalCosts = projects.reduce((sum, project) => sum + (project.domainCost || 0) + (project.additionalCosts || 0), 0);
+    const totalProfit = totalAmountReceived - totalCosts;
 
-    return { totalRevenue, totalCosts, totalProfit };
+    return { totalRevenue, totalAmountReceived, totalRemainingAmount, totalCosts, totalProfit };
   }, [projects]);
 
   const getProjectFinances = useCallback((): ProjectFinance[] => {
     return projects.map(project => ({
       ...project,
-      revenue: project.totalAmount,
-      totalProjectCosts: project.domainCost + project.additionalCosts,
-      profit: project.totalAmount - (project.domainCost + project.additionalCosts),
+      revenue: project.totalAmount || 0,
+      totalProjectCosts: (project.domainCost || 0) + (project.additionalCosts || 0),
+      profit: (project.totalAmount || 0) - ((project.domainCost || 0) + (project.additionalCosts || 0)),
     }));
   }, [projects]);
 

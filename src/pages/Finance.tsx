@@ -1,5 +1,13 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -9,19 +17,97 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useProjects } from "@/contexts/ProjectContext";
-import { DollarSign, TrendingUp, TrendingDown, BarChart3 } from "lucide-react";
+import { DollarSign, TrendingUp, TrendingDown, BarChart3, Calendar, Filter } from "lucide-react";
+import { useState, useMemo } from "react";
 
 const Finance = () => {
   const { getFinanceOverview, getProjectFinances } = useProjects();
+  const [dateFilter, setDateFilter] = useState<string>("all");
   
-  const overview = getFinanceOverview();
-  const projectFinances = getProjectFinances();
+  // Get date filter function
+  const getDateFilter = (filter: string) => {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    
+    switch (filter) {
+      case "month":
+        const oneMonthAgo = new Date(today);
+        oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+        return oneMonthAgo;
+      case "3months":
+        const threeMonthsAgo = new Date(today);
+        threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+        return threeMonthsAgo;
+      case "6months":
+        const sixMonthsAgo = new Date(today);
+        sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+        return sixMonthsAgo;
+      case "year":
+        const oneYearAgo = new Date(today);
+        oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+        return oneYearAgo;
+      default:
+        return null; // No filter
+    }
+  };
+
+  // Filter projects based on date filter
+  const filteredProjectFinances = useMemo(() => {
+    const allProjectFinances = getProjectFinances();
+    const filterDate = getDateFilter(dateFilter);
+    
+    if (!filterDate) {
+      return allProjectFinances;
+    }
+    
+    return allProjectFinances.filter(project => {
+      // Use finishedDate if available (for completed projects), otherwise use createdAt
+      const projectDate = project.finishedDate ? new Date(project.finishedDate) : new Date(project.createdAt);
+      return projectDate >= filterDate;
+    });
+  }, [getProjectFinances, dateFilter]);
+
+  // Calculate filtered overview
+  const filteredOverview = useMemo(() => {
+    const totalRevenue = filteredProjectFinances.reduce((sum, project) => sum + (project.totalAmount || 0), 0);
+    const totalAmountReceived = filteredProjectFinances.reduce((sum, project) => sum + (project.amountReceived || 0), 0);
+    const totalRemainingAmount = filteredProjectFinances.reduce((sum, project) => sum + (project.remainingAmount || 0), 0);
+    const totalCosts = filteredProjectFinances.reduce((sum, project) => sum + (project.domainCost || 0) + (project.additionalCosts || 0), 0);
+    const totalProfit = totalAmountReceived - totalCosts;
+
+    return { totalRevenue, totalAmountReceived, totalRemainingAmount, totalCosts, totalProfit };
+  }, [filteredProjectFinances]);
+  
+  const overview = dateFilter === "all" ? getFinanceOverview() : filteredOverview;
+  const projectFinances = filteredProjectFinances;
+  
+  const profitMargin = overview.totalRevenue > 0 ? (overview.totalProfit / overview.totalRevenue) * 100 : 0;
+
+  const getProfitMarginDescription = (margin: number) => {
+    if (margin < 0) return 'Operating at a loss';
+    if (margin === 0) return 'Break-even point';
+    if (margin < 5) return 'Very low margin';
+    if (margin < 10) return 'Low margin';
+    if (margin < 15) return 'Moderate margin';
+    if (margin < 25) return 'Good margin';
+    if (margin < 35) return 'Strong margin';
+    if (margin < 50) return 'Excellent margin';
+    return 'Outstanding margin';
+  };
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'USD'
+      currency: 'SAR'
     }).format(amount);
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
   };
 
   const getLabelVariant = (label: string) => {
@@ -48,10 +134,30 @@ const Finance = () => {
             Track your revenue, costs, and profit across all projects
           </p>
         </div>
+        
+        {/* Date Filter */}
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Filter className="w-4 h-4" />
+            <span>Filter by:</span>
+          </div>
+          <Select value={dateFilter} onValueChange={setDateFilter}>
+            <SelectTrigger className="w-40">
+              <SelectValue placeholder="Select period" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Time</SelectItem>
+              <SelectItem value="month">Last Month</SelectItem>
+              <SelectItem value="3months">Last 3 Months</SelectItem>
+              <SelectItem value="6months">Last 6 Months</SelectItem>
+              <SelectItem value="year">Last Year</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* Financial Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card className="p-6 bg-gradient-card border-border">
           <div className="flex items-center justify-between">
             <div>
@@ -65,6 +171,42 @@ const Finance = () => {
             </div>
             <div className="w-12 h-12 rounded-lg bg-success/10 flex items-center justify-center">
               <TrendingUp className="w-6 h-6 text-success" />
+            </div>
+          </div>
+        </Card>
+
+        {/* Amount Received */}
+        <Card className="p-6 bg-gradient-card border-border">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-muted-foreground text-sm font-medium">Amount Received</p>
+              <p className="text-3xl font-bold text-primary mt-1">
+                {formatCurrency(overview.totalAmountReceived)}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Payments received
+              </p>
+            </div>
+            <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
+              <DollarSign className="w-6 h-6 text-primary" />
+            </div>
+          </div>
+        </Card>
+
+        {/* Remaining Amount */}
+        <Card className="p-6 bg-gradient-card border-border">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-muted-foreground text-sm font-medium">Remaining</p>
+              <p className="text-3xl font-bold text-warning mt-1">
+                {formatCurrency(overview.totalRemainingAmount)}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Outstanding payments
+              </p>
+            </div>
+            <div className="w-12 h-12 rounded-lg bg-warning/10 flex items-center justify-center">
+              <TrendingDown className="w-6 h-6 text-warning" />
             </div>
           </div>
         </Card>
@@ -113,13 +255,10 @@ const Finance = () => {
           <div>
             <h3 className="text-lg font-semibold text-foreground">Profit Margin</h3>
             <p className="text-2xl font-bold text-primary">
-              {overview.totalRevenue > 0 
-                ? `${((overview.totalProfit / overview.totalRevenue) * 100).toFixed(1)}%`
-                : '0%'
-              }
+              {profitMargin.toFixed(1)}%
             </p>
             <p className="text-sm text-muted-foreground">
-              {overview.totalProfit >= 0 ? 'Healthy profit margin' : 'Operating at a loss'}
+              {getProfitMarginDescription(profitMargin)}
             </p>
           </div>
         </div>
@@ -144,6 +283,7 @@ const Finance = () => {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Project Name</TableHead>
+                    <TableHead>Date</TableHead>
                     <TableHead>Revenue</TableHead>
                     <TableHead>Domain Cost</TableHead>
                     <TableHead>Additional Costs</TableHead>
@@ -157,20 +297,38 @@ const Finance = () => {
                   {projectFinances.map((project) => (
                     <TableRow key={project.id} className="hover:bg-muted/50 transition-colors">
                       <TableCell className="font-medium">{project.name}</TableCell>
+                      <TableCell className="text-muted-foreground">
+                        <div className="flex items-center gap-2">
+                          <Calendar className="w-4 h-4" />
+                          <span className="text-sm">
+                            {project.finishedDate ? formatDate(project.finishedDate) : formatDate(project.createdAt)}
+                          </span>
+                        </div>
+                        {project.finishedDate && (
+                          <div className="text-xs text-muted-foreground mt-1">
+                            Completed
+                          </div>
+                        )}
+                        {!project.finishedDate && (
+                          <div className="text-xs text-muted-foreground mt-1">
+                            Created
+                          </div>
+                        )}
+                      </TableCell>
                       <TableCell className="text-success font-medium">
                         {formatCurrency(project.revenue)}
                       </TableCell>
                       <TableCell className="text-destructive">
-                        {formatCurrency(project.domainCost)}
+                        {formatCurrency(project.domainCost || 0)}
                       </TableCell>
                       <TableCell className="text-destructive">
-                        {formatCurrency(project.additionalCosts)}
+                        {formatCurrency(project.additionalCosts || 0)}
                       </TableCell>
                       <TableCell className="text-destructive font-medium">
                         {formatCurrency(project.totalProjectCosts)}
                       </TableCell>
                       <TableCell className={`font-medium ${getProfitColor(project.profit)}`}>
-                        {formatCurrency(project.profit)}
+                        {formatCurrency(project.profit || 0)}
                       </TableCell>
                       <TableCell>
                         <Badge variant={getStatusVariant(project.status)}>

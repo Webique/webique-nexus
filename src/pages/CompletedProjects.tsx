@@ -12,6 +12,16 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { EditProjectDialog } from "@/components/projects/EditProjectDialog";
 import { ProjectDetailsDialog } from "@/components/projects/ProjectDetailsDialog";
 import { Project } from "@/types/project";
@@ -20,13 +30,14 @@ const CompletedProjects = () => {
   const { getCompletedProjects, deleteProject } = useProjects();
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [viewingProject, setViewingProject] = useState<Project | null>(null);
+  const [deletingProject, setDeletingProject] = useState<Project | null>(null);
   
   const completedProjects = getCompletedProjects();
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'USD'
+      currency: 'SAR'
     }).format(amount);
   };
 
@@ -38,8 +49,15 @@ const CompletedProjects = () => {
     return label === 'In-House' ? 'default' : 'secondary';
   };
 
-  const handleDeleteProject = (id: string) => {
-    deleteProject(id);
+  const handleDeleteProject = (project: Project) => {
+    setDeletingProject(project);
+  };
+
+  const confirmDelete = () => {
+    if (deletingProject) {
+      deleteProject(deletingProject.id);
+      setDeletingProject(null);
+    }
   };
 
   return (
@@ -73,7 +91,7 @@ const CompletedProjects = () => {
             <div>
               <p className="text-muted-foreground text-sm">Total Revenue</p>
               <p className="text-2xl font-bold text-foreground">
-                {formatCurrency(completedProjects.reduce((sum, project) => sum + project.totalAmount, 0))}
+                {formatCurrency(completedProjects.reduce((sum, project) => sum + (project.totalAmount || 0), 0))}
               </p>
             </div>
             <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -88,7 +106,7 @@ const CompletedProjects = () => {
               <p className="text-muted-foreground text-sm">Avg Project Value</p>
               <p className="text-2xl font-bold text-foreground">
                 {completedProjects.length > 0 
-                  ? formatCurrency(completedProjects.reduce((sum, project) => sum + project.totalAmount, 0) / completedProjects.length)
+                  ? formatCurrency(completedProjects.reduce((sum, project) => sum + (project.totalAmount || 0), 0) / completedProjects.length)
                   : '$0'
                 }
               </p>
@@ -122,7 +140,9 @@ const CompletedProjects = () => {
                     <TableHead>Phone Number</TableHead>
                     <TableHead>Instagram</TableHead>
                     <TableHead>Website</TableHead>
-                    <TableHead>Amount</TableHead>
+                    <TableHead>Total Amount</TableHead>
+                    <TableHead>Received</TableHead>
+                    <TableHead>Remaining</TableHead>
                     <TableHead>Finished Date</TableHead>
                     <TableHead>Label</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
@@ -159,7 +179,11 @@ const CompletedProjects = () => {
                           </a>
                         )}
                       </TableCell>
-                      <TableCell>{formatCurrency(project.totalAmount)}</TableCell>
+                      <TableCell className="font-medium">{formatCurrency(project.totalAmount || 0)}</TableCell>
+                      <TableCell className="text-primary">{formatCurrency(project.amountReceived || 0)}</TableCell>
+                      <TableCell className={`font-medium ${(project.remainingAmount || 0) > 0 ? 'text-warning' : 'text-success'}`}>
+                        {formatCurrency(project.remainingAmount || 0)}
+                      </TableCell>
                       <TableCell>{project.finishedDate ? formatDate(project.finishedDate) : 'N/A'}</TableCell>
                       <TableCell>
                         <Badge variant={getLabelVariant(project.label)}>
@@ -187,7 +211,7 @@ const CompletedProjects = () => {
                           <Button
                             size="sm"
                             variant="ghost"
-                            onClick={() => handleDeleteProject(project.id)}
+                            onClick={() => handleDeleteProject(project)}
                             className="hover:bg-destructive/10 hover:text-destructive"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -216,9 +240,30 @@ const CompletedProjects = () => {
         <ProjectDetailsDialog 
           project={viewingProject}
           open={!!viewingProject} 
-          onOpenChange={(open) => !open && setViewingProject(null)} 
+          onOpenChange={(open) => !open && setViewingProject(null)}
         />
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!deletingProject} onOpenChange={(open) => !open && setDeletingProject(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Project</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{deletingProject?.name}"? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
