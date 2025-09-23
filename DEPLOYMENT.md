@@ -29,18 +29,18 @@
 
 ### 2. Frontend Deployment (Netlify)
 
-1. **Build your frontend:**
-   ```bash
-   npm run build
-   ```
-
-2. **Go to [Netlify.com](https://netlify.com/)**
-3. **Drag and drop your `dist` folder** or connect your GitHub repo
+1. **Go to [Netlify.com](https://netlify.com/)**
+2. **Connect your GitHub repository**
+3. **Configure build settings:**
+   - **Build Command**: `npm run build`
+   - **Publish Directory**: `dist`
+   - **Node Version**: 18 (set in netlify.toml)
 4. **Set Environment Variables:**
    - Go to Site Settings → Environment Variables
    - Add: `VITE_API_URL` = `https://your-render-backend-url.onrender.com`
-
 5. **Deploy!**
+
+**Note**: The `netlify.toml` file is already configured for optimal deployment.
 
 ### 3. MongoDB Setup
 
@@ -100,6 +100,11 @@ VITE_API_URL=https://your-render-backend-url.onrender.com
    - Check the build logs in Render
    - The prebuild script ensures dependencies are installed
    - TypeScript compilation is now optimized for production
+
+6. **Frontend build failures:**
+   - Removed `lovable-tagger` dependency from vite.config.ts
+   - Created netlify.toml for proper build configuration
+   - Ensure VITE_API_URL environment variable is set in Netlify
 
 ## 📊 After Deployment
 
