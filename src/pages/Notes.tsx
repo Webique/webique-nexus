@@ -57,6 +57,7 @@ const Notes = () => {
     updateDailyTask,
     moveDailyTask,
     deleteDailyTask,
+    toggleDailyTaskCompleted,
   } = useNotes();
   // expose toggle to checkbox handler
   // @ts-ignore
@@ -323,16 +324,10 @@ const Notes = () => {
                   <GripVertical className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
                   <div className="flex items-start gap-2 flex-1">
                     <Checkbox
-                      checked={(task as any).completed}
+                      checked={Boolean((task as any).completed)}
                       onCheckedChange={(checked) => {
-                        // use context directly
                         // eslint-disable-next-line @typescript-eslint/no-floating-promises
-                        (async () => {
-                          try {
-                            // @ts-ignore
-                            await (useNotes() as any).toggleDailyTaskCompleted(task.id, !!checked);
-                          } catch {}
-                        })();
+                        toggleDailyTaskCompleted(task.id, checked === true);
                       }}
                       className="mt-0.5"
                     />
