@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Calculator, DollarSign, Users, User, Building2 } from "lucide-react";
+import { Calculator as CalculatorIcon, DollarSign, Users, User, Building2 } from "lucide-react";
 
 interface CalculationResult {
   totalProjects: number;
@@ -96,7 +96,7 @@ export default function Calculator() {
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center gap-3 mb-6">
-        <Calculator className="w-8 h-8 text-primary" />
+        <CalculatorIcon className="w-8 h-8 text-primary" />
         <h1 className="text-3xl font-bold">Project Calculator</h1>
       </div>
 
@@ -136,7 +136,7 @@ export default function Calculator() {
             </div>
 
             <Button onClick={calculateProjects} className="w-full" size="lg">
-              <Calculator className="w-4 h-4 mr-2" />
+              <CalculatorIcon className="w-4 h-4 mr-2" />
               Calculate Projects
             </Button>
           </CardContent>
