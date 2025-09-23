@@ -50,6 +50,19 @@ const ActiveProjects = () => {
     return label === 'In-House' ? 'default' : 'secondary';
   };
 
+  const buildInstagramUrl = (value: string): string => {
+    if (!value) return '#';
+    let v = value.trim();
+    if (v.startsWith('http')) return v;
+    // strip leading @ and any leading domain if user pasted it without protocol
+    if (v.startsWith('@')) v = v.slice(1);
+    v = v
+      .replace(/^https?:\/\/(www\.)?instagram\.com\//i, '')
+      .replace(/^instagram\.com\//i, '')
+      .replace(/\/+$/,'');
+    return `https://instagram.com/${v}`;
+  };
+
   const handleCompleteProject = (project: Project) => {
     setCompletingProject(project);
   };
@@ -176,7 +189,7 @@ const ActiveProjects = () => {
                       <TableCell>
                         {project.instagram && (
                           <a 
-                            href={project.instagram.startsWith('http') ? project.instagram : `https://${project.instagram}`}
+                            href={buildInstagramUrl(project.instagram)}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-primary hover:underline flex items-center gap-1"
