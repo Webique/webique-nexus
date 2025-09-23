@@ -111,6 +111,28 @@ router.put('/daily-tasks/:id', async (req: Request, res: Response, next: NextFun
     return next(error);
   }
 });
+// PATCH /api/notes/daily-tasks/:id/complete - toggle completion
+router.patch('/daily-tasks/:id/complete', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { completed } = req.body as { completed: boolean };
+    const task = await DailyTask.findByIdAndUpdate(
+      req.params.id,
+      { completed: !!completed },
+      { new: true, runValidators: true }
+    );
+
+    if (!task) {
+      return res.status(404).json({
+        success: false,
+        error: 'Daily task not found'
+      });
+    }
+
+    return res.json({ success: true, data: task });
+  } catch (error) {
+    return next(error);
+  }
+});
 
 router.delete('/daily-tasks/:id', async (req: Request, res: Response, next: NextFunction) => {
   try {

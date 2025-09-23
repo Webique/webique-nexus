@@ -35,6 +35,7 @@ import {
   ChevronDown,
   ChevronRight as ChevronRightIcon
 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Collapsible,
   CollapsibleContent,
@@ -57,6 +58,19 @@ const Notes = () => {
     moveDailyTask,
     deleteDailyTask,
   } = useNotes();
+  // expose toggle to checkbox handler
+  // @ts-ignore
+  (window as any).toggleTask = async (id: string, completed: boolean) => {
+    try {
+      // use NotesContext toggle when available
+      const ctx: any = useNotes();
+      if (ctx && ctx.toggleDailyTaskCompleted) {
+        await ctx.toggleDailyTaskCompleted(id, completed);
+      }
+    } catch (e) {
+      // noop
+    }
+  };
 
   // Date navigation state
   const [currentDate, setCurrentDate] = useState(() => {
@@ -307,7 +321,18 @@ const Notes = () => {
               >
                 <div className="flex items-start gap-2">
                   <GripVertical className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-                  <p className="text-sm text-foreground flex-1">{task.content}</p>
+                  <div className="flex items-start gap-2 flex-1">
+                    <Checkbox
+                      checked={(task as any).completed}
+                      onCheckedChange={(checked) => {
+                        // call context toggle
+                        // @ts-ignore toggle helper on window
+                        (window as any).toggleTask && (window as any).toggleTask(task.id, !!checked);
+                      }}
+                      className="mt-0.5"
+                    />
+                    <p className={`text-sm flex-1 ${ (task as any).completed ? 'text-muted-foreground line-through' : 'text-foreground'}`}>{task.content}</p>
+                  </div>
                   <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     <Button
                       size="sm"

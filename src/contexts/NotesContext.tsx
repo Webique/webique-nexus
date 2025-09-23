@@ -18,6 +18,7 @@ interface NotesContextType {
   updateDailyTask: (id: string, content: string) => Promise<void>;
   moveDailyTask: (id: string, newDate: string) => Promise<void>;
   deleteDailyTask: (id: string) => Promise<void>;
+  toggleDailyTaskCompleted: (id: string, completed: boolean) => Promise<void>;
 }
 
 const NotesContext = createContext<NotesContextType | undefined>(undefined);
@@ -56,6 +57,8 @@ export const NotesProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     id: doc.id || doc._id,
     content: doc.content,
     date: doc.date ? new Date(doc.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+    // @ts-ignore allow completed extension at runtime
+    completed: !!doc.completed,
     createdAt: doc.createdAt || new Date().toISOString(),
     updatedAt: doc.updatedAt || new Date().toISOString(),
   });
@@ -279,6 +282,19 @@ export const NotesProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       setLoading(false);
     }
   }, [dailyTasks, toast]);
+
+  const toggleDailyTaskCompleted = useCallback(async (id: string, completed: boolean) => {
+    try {
+      setLoading(true);
+      const response = await ApiService.toggleDailyTaskComplete(id, completed);
+      const updated = normalizeDailyTask(response);
+      setDailyTasks(prev => prev.map(t => t.id === id ? updated : t));
+    } catch (error) {
+      console.error('Failed to toggle task:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   const moveDailyTask = useCallback(async (id: string, newDate: string) => {
     try {

@@ -149,6 +149,13 @@ export class ApiService {
     });
   }
 
+  static async toggleDailyTaskComplete(id: string, completed: boolean) {
+    return this.request(`/api/notes/daily-tasks/${id}/complete`, {
+      method: 'PATCH',
+      body: JSON.stringify({ completed }),
+    });
+  }
+
   static async getGeneralNotes() {
     return this.request('/api/notes/general');
   }

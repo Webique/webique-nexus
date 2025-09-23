@@ -9,6 +9,7 @@ export interface IImportantNote extends Document {
 export interface IDailyTask extends Document {
   content: string;
   date: Date;
+  completed?: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -40,6 +41,11 @@ const DailyTaskSchema = new Schema<IDailyTask>({
   date: {
     type: Date,
     required: [true, 'Task date is required']
+  },
+  completed: {
+    type: Boolean,
+    default: false,
+    index: true
   }
 }, {
   timestamps: true
