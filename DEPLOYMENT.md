@@ -83,7 +83,8 @@ VITE_API_URL=https://your-render-backend-url.onrender.com
    - Check that all imports are using CommonJS syntax
 
 2. **TypeScript "Cannot find type definition file for 'node'" error:**
-   - This has been fixed with custom type definitions
+   - Fixed by moving @types/node to dependencies (not devDependencies)
+   - Added proper TypeScript configuration with "types": ["node"]
    - The build now uses `--noEmit false` flag for better compatibility
 
 3. **CORS errors:**
