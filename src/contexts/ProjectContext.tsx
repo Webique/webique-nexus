@@ -41,6 +41,27 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
+  const normalizeProject = (doc: any): Project => ({
+    id: doc.id || doc._id,
+    name: doc.name,
+    phoneNumber: doc.phoneNumber,
+    notes: doc.notes,
+    instagram: doc.instagram,
+    websiteLink: doc.websiteLink,
+    totalAmount: doc.totalAmount,
+    amountReceived: doc.amountReceived,
+    remainingAmount: doc.remainingAmount,
+    finishedDate: doc.finishedDate ? new Date(doc.finishedDate).toISOString() : undefined,
+    domainCost: doc.domainCost,
+    additionalCosts: doc.additionalCosts,
+    additionalCostReason: doc.additionalCostReason,
+    freelancerManagerFees: doc.freelancerManagerFees,
+    freelancerFees: doc.freelancerFees,
+    label: doc.label,
+    status: doc.status,
+    createdAt: doc.createdAt || new Date().toISOString(),
+  });
+
   // Load projects from API on component mount
   useEffect(() => {
     loadProjects();
@@ -52,7 +73,13 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
     try {
       setLoading(true);
       const response = await ApiService.getProjects();
-      setProjects(response.data || []);
+      // response is an array (ApiService unwraps .data)
+      const normalized = Array.isArray(response)
+        ? response.map(normalizeProject)
+        : Array.isArray((response as any)?.data)
+          ? (response as any).data.map(normalizeProject)
+          : [];
+      setProjects(normalized);
     } catch (error) {
       console.error('Failed to load projects:', error);
       toast({
@@ -68,7 +95,10 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const loadSubscriptions = useCallback(async () => {
     try {
       const response = await ApiService.getSubscriptions();
-      setSubscriptions(response.data || []);
+      const items = Array.isArray(response)
+        ? response
+        : Array.isArray((response as any)?.data) ? (response as any).data : [];
+      setSubscriptions(items as Subscription[]);
     } catch (error) {
       console.error('Failed to load subscriptions:', error);
     }
@@ -77,7 +107,10 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const loadTikTokAds = useCallback(async () => {
     try {
       const response = await ApiService.getTikTokAds();
-      setTiktokAds(response.data || []);
+      const items = Array.isArray(response)
+        ? response
+        : Array.isArray((response as any)?.data) ? (response as any).data : [];
+      setTiktokAds(items as TikTokAd[]);
     } catch (error) {
       console.error('Failed to load TikTok ads:', error);
     }
@@ -87,10 +120,11 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
     try {
       setLoading(true);
       const response = await ApiService.createProject(projectData);
-      setProjects(prev => [...prev, response]);
+      const created = normalizeProject(response);
+      setProjects(prev => [...prev, created]);
       toast({
         title: "Project Added",
-        description: `${response.name} has been added successfully.`,
+        description: `${created.name} has been added successfully.`,
       });
     } catch (error) {
       console.error('Failed to add project:', error);
@@ -108,9 +142,8 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
     try {
       setLoading(true);
       const response = await ApiService.updateProject(id, updates);
-      setProjects(prev => prev.map(project => 
-        project.id === id ? response : project
-      ));
+      const updated = normalizeProject(response);
+      setProjects(prev => prev.map(project => project.id === id ? updated : project));
       toast({
         title: "Project Updated",
         description: "Project has been updated successfully.",
@@ -157,9 +190,8 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
         finishedDate: new Date().toISOString() 
       };
       const response = await ApiService.updateProject(id, updates);
-      setProjects(prev => prev.map(project => 
-        project.id === id ? response : project
-      ));
+      const updated = normalizeProject(response);
+      setProjects(prev => prev.map(project => project.id === id ? updated : project));
       toast({
         title: "Project Completed",
         description: "Project has been moved to completed projects.",
