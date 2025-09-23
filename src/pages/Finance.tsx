@@ -16,13 +16,25 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { useProjects } from "@/contexts/ProjectContext";
-import { DollarSign, TrendingUp, TrendingDown, BarChart3, Calendar, Filter } from "lucide-react";
+import { AddSubscriptionDialog } from "@/components/subscriptions/AddSubscriptionDialog";
+import { AddTikTokAdDialog } from "@/components/tiktok-ads/AddTikTokAdDialog";
+import { DollarSign, TrendingUp, TrendingDown, BarChart3, Calendar, Filter, ChevronDown, ChevronRight, Plus, CreditCard, Megaphone } from "lucide-react";
 import { useState, useMemo } from "react";
 
 const Finance = () => {
-  const { getFinanceOverview, getProjectFinances } = useProjects();
+  const { getFinanceOverview, getProjectFinances, subscriptions, tiktokAds } = useProjects();
   const [dateFilter, setDateFilter] = useState<string>("all");
+  const [projectBreakdownOpen, setProjectBreakdownOpen] = useState<boolean>(false);
+  const [subscriptionsOpen, setSubscriptionsOpen] = useState<boolean>(false);
+  const [tiktokAdsOpen, setTiktokAdsOpen] = useState<boolean>(false);
+  const [showAddSubscriptionDialog, setShowAddSubscriptionDialog] = useState<boolean>(false);
+  const [showAddTikTokAdDialog, setShowAddTikTokAdDialog] = useState<boolean>(false);
   
   // Get date filter function
   const getDateFilter = (filter: string) => {
@@ -69,7 +81,7 @@ const Finance = () => {
 
   // Calculate filtered overview
   const filteredOverview = useMemo(() => {
-    const totalRevenue = filteredProjectFinances.reduce((sum, project) => sum + (project.totalAmount || 0), 0);
+    const totalRevenue = filteredProjectFinances.reduce((sum, project) => sum + (project.amountReceived || 0), 0);
     const totalAmountReceived = filteredProjectFinances.reduce((sum, project) => sum + (project.amountReceived || 0), 0);
     const totalRemainingAmount = filteredProjectFinances.reduce((sum, project) => sum + (project.remainingAmount || 0), 0);
     const totalCosts = filteredProjectFinances.reduce((sum, project) => sum + (project.domainCost || 0) + (project.additionalCosts || 0), 0);
@@ -157,7 +169,7 @@ const Finance = () => {
       </div>
 
       {/* Financial Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <Card className="p-6 bg-gradient-card border-border">
           <div className="flex items-center justify-between">
             <div>
@@ -171,24 +183,6 @@ const Finance = () => {
             </div>
             <div className="w-12 h-12 rounded-lg bg-success/10 flex items-center justify-center">
               <TrendingUp className="w-6 h-6 text-success" />
-            </div>
-          </div>
-        </Card>
-
-        {/* Amount Received */}
-        <Card className="p-6 bg-gradient-card border-border">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-muted-foreground text-sm font-medium">Amount Received</p>
-              <p className="text-3xl font-bold text-primary mt-1">
-                {formatCurrency(overview.totalAmountReceived)}
-              </p>
-              <p className="text-xs text-muted-foreground mt-1">
-                Payments received
-              </p>
-            </div>
-            <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
-              <DollarSign className="w-6 h-6 text-primary" />
             </div>
           </div>
         </Card>
@@ -264,90 +258,314 @@ const Finance = () => {
         </div>
       </Card>
 
-      {/* Project Breakdown Table */}
+      {/* Project Breakdown Section */}
       <Card className="bg-gradient-card border-border">
-        <div className="p-6">
-          <h2 className="text-xl font-semibold text-foreground mb-4">Project Financial Breakdown</h2>
-          
-          {projectFinances.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="w-16 h-16 rounded-lg bg-muted flex items-center justify-center mx-auto mb-4">
-                <BarChart3 className="w-8 h-8 text-muted-foreground" />
+        <Collapsible open={projectBreakdownOpen} onOpenChange={setProjectBreakdownOpen}>
+          <CollapsibleTrigger asChild>
+            <Button
+              variant="ghost"
+              className="w-full justify-between p-6 h-auto hover:bg-transparent"
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <BarChart3 className="w-6 h-6 text-primary" />
+                </div>
+                <div className="text-left">
+                  <h3 className="text-lg font-semibold text-foreground">Project Financial Breakdown</h3>
+                  <p className="text-sm text-muted-foreground">
+                    {projectFinances.length} projects
+                  </p>
+                </div>
               </div>
-              <h3 className="text-lg font-medium text-foreground mb-2">No Financial Data</h3>
-              <p className="text-muted-foreground">Add some projects to see financial breakdowns</p>
+              <div className="flex items-center gap-4">
+                <div className="text-right">
+                  <p className="text-xl font-bold text-success">
+                    {formatCurrency(projectFinances.reduce((sum, project) => sum + project.revenue, 0))}
+                  </p>
+                  <p className="text-xs text-muted-foreground">Total revenue</p>
+                </div>
+                {projectBreakdownOpen ? (
+                  <ChevronDown className="w-5 h-5 text-muted-foreground" />
+                ) : (
+                  <ChevronRight className="w-5 h-5 text-muted-foreground" />
+                )}
+              </div>
+            </Button>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <div className="px-6 pb-6">
+              {projectFinances.length === 0 ? (
+                <div className="text-center py-8">
+                  <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center mx-auto mb-3">
+                    <BarChart3 className="w-6 h-6 text-muted-foreground" />
+                  </div>
+                  <h4 className="text-sm font-medium text-foreground mb-1">No Financial Data</h4>
+                  <p className="text-xs text-muted-foreground">Add some projects to see financial breakdowns</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Project Name</TableHead>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Revenue</TableHead>
+                        <TableHead>Amount Received</TableHead>
+                        <TableHead>Domain Cost</TableHead>
+                        <TableHead>Additional Costs</TableHead>
+                        <TableHead>Total Costs</TableHead>
+                        <TableHead>Profit</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Label</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {projectFinances.map((project) => (
+                        <TableRow key={project.id} className="hover:bg-muted/50 transition-colors">
+                          <TableCell className="font-medium">{project.name}</TableCell>
+                          <TableCell className="text-muted-foreground">
+                            <div className="flex items-center gap-2">
+                              <Calendar className="w-4 h-4" />
+                              <span className="text-sm">
+                                {project.finishedDate ? formatDate(project.finishedDate) : formatDate(project.createdAt)}
+                              </span>
+                            </div>
+                            {project.finishedDate && (
+                              <div className="text-xs text-muted-foreground mt-1">
+                                Completed
+                              </div>
+                            )}
+                            {!project.finishedDate && (
+                              <div className="text-xs text-muted-foreground mt-1">
+                                Created
+                              </div>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-success font-medium">
+                            {formatCurrency(project.revenue)}
+                          </TableCell>
+                          <TableCell className="text-primary font-medium">
+                            {formatCurrency(project.amountReceived || 0)}
+                          </TableCell>
+                          <TableCell className="text-destructive">
+                            {formatCurrency(project.domainCost || 0)}
+                          </TableCell>
+                          <TableCell className="text-destructive">
+                            {formatCurrency(project.additionalCosts || 0)}
+                          </TableCell>
+                          <TableCell className="text-destructive font-medium">
+                            {formatCurrency(project.totalProjectCosts)}
+                          </TableCell>
+                          <TableCell className={`font-medium ${getProfitColor(project.profit)}`}>
+                            {formatCurrency(project.profit || 0)}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={getStatusVariant(project.status)}>
+                              {project.status === 'completed' ? 'Completed' : 'Active'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={getLabelVariant(project.label)}>
+                              {project.label}
+                            </Badge>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
             </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Project Name</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Revenue</TableHead>
-                    <TableHead>Domain Cost</TableHead>
-                    <TableHead>Additional Costs</TableHead>
-                    <TableHead>Total Costs</TableHead>
-                    <TableHead>Profit</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Label</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {projectFinances.map((project) => (
-                    <TableRow key={project.id} className="hover:bg-muted/50 transition-colors">
-                      <TableCell className="font-medium">{project.name}</TableCell>
-                      <TableCell className="text-muted-foreground">
-                        <div className="flex items-center gap-2">
-                          <Calendar className="w-4 h-4" />
-                          <span className="text-sm">
-                            {project.finishedDate ? formatDate(project.finishedDate) : formatDate(project.createdAt)}
-                          </span>
-                        </div>
-                        {project.finishedDate && (
-                          <div className="text-xs text-muted-foreground mt-1">
-                            Completed
-                          </div>
-                        )}
-                        {!project.finishedDate && (
-                          <div className="text-xs text-muted-foreground mt-1">
-                            Created
-                          </div>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-success font-medium">
-                        {formatCurrency(project.revenue)}
-                      </TableCell>
-                      <TableCell className="text-destructive">
-                        {formatCurrency(project.domainCost || 0)}
-                      </TableCell>
-                      <TableCell className="text-destructive">
-                        {formatCurrency(project.additionalCosts || 0)}
-                      </TableCell>
-                      <TableCell className="text-destructive font-medium">
-                        {formatCurrency(project.totalProjectCosts)}
-                      </TableCell>
-                      <TableCell className={`font-medium ${getProfitColor(project.profit)}`}>
-                        {formatCurrency(project.profit || 0)}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={getStatusVariant(project.status)}>
-                          {project.status === 'completed' ? 'Completed' : 'Active'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={getLabelVariant(project.label)}>
-                          {project.label}
-                        </Badge>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </div>
+          </CollapsibleContent>
+        </Collapsible>
       </Card>
+
+      {/* Subscriptions Section */}
+      <Card className="bg-gradient-card border-border">
+        <Collapsible open={subscriptionsOpen} onOpenChange={setSubscriptionsOpen}>
+          <CollapsibleTrigger asChild>
+            <Button
+              variant="ghost"
+              className="w-full justify-between p-6 h-auto hover:bg-transparent"
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <CreditCard className="w-6 h-6 text-primary" />
+                </div>
+                <div className="text-left">
+                  <h3 className="text-lg font-semibold text-foreground">Subscriptions</h3>
+                  <p className="text-sm text-muted-foreground">
+                    {subscriptions.length} subscriptions
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="text-right">
+                  <p className="text-xl font-bold text-destructive">
+                    {formatCurrency(overview.totalSubscriptionCosts)}
+                  </p>
+                  <p className="text-xs text-muted-foreground">Total spent</p>
+                </div>
+                {subscriptionsOpen ? (
+                  <ChevronDown className="w-5 h-5 text-muted-foreground" />
+                ) : (
+                  <ChevronRight className="w-5 h-5 text-muted-foreground" />
+                )}
+              </div>
+            </Button>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <div className="px-6 pb-6">
+              <div className="flex justify-between items-center mb-4">
+                <h4 className="text-sm font-medium text-foreground">Subscription Details</h4>
+                <Button
+                  size="sm"
+                  onClick={() => setShowAddSubscriptionDialog(true)}
+                  className="h-8 px-3"
+                >
+                  <Plus className="w-4 h-4 mr-1" />
+                  Add
+                </Button>
+              </div>
+              
+              {subscriptions.length === 0 ? (
+                <div className="text-center py-8">
+                  <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center mx-auto mb-3">
+                    <CreditCard className="w-6 h-6 text-muted-foreground" />
+                  </div>
+                  <h4 className="text-sm font-medium text-foreground mb-1">No Subscriptions</h4>
+                  <p className="text-xs text-muted-foreground">Add subscriptions to track recurring costs</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {subscriptions.map((subscription) => (
+                    <div
+                      key={subscription.id}
+                      className="flex items-center justify-between p-3 rounded-lg bg-muted/50 border border-border"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                          <CreditCard className="w-4 h-4 text-primary" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-foreground">{subscription.name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {formatDate(subscription.date)}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-semibold text-foreground">
+                          {formatCurrency(subscription.price)}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
+      </Card>
+
+      {/* TikTok Ads Section */}
+      <Card className="bg-gradient-card border-border">
+        <Collapsible open={tiktokAdsOpen} onOpenChange={setTiktokAdsOpen}>
+          <CollapsibleTrigger asChild>
+            <Button
+              variant="ghost"
+              className="w-full justify-between p-6 h-auto hover:bg-transparent"
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-lg bg-info/10 flex items-center justify-center">
+                  <Megaphone className="w-6 h-6 text-info" />
+                </div>
+                <div className="text-left">
+                  <h3 className="text-lg font-semibold text-foreground">TikTok Ads</h3>
+                  <p className="text-sm text-muted-foreground">
+                    {tiktokAds.length} ads
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="text-right">
+                  <p className="text-xl font-bold text-destructive">
+                    {formatCurrency(overview.totalTikTokAdCosts)}
+                  </p>
+                  <p className="text-xs text-muted-foreground">Total spent</p>
+                </div>
+                {tiktokAdsOpen ? (
+                  <ChevronDown className="w-5 h-5 text-muted-foreground" />
+                ) : (
+                  <ChevronRight className="w-5 h-5 text-muted-foreground" />
+                )}
+              </div>
+            </Button>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <div className="px-6 pb-6">
+              <div className="flex justify-between items-center mb-4">
+                <h4 className="text-sm font-medium text-foreground">Campaign Details</h4>
+                <Button
+                  size="sm"
+                  onClick={() => setShowAddTikTokAdDialog(true)}
+                  className="h-8 px-3"
+                >
+                  <Plus className="w-4 h-4 mr-1" />
+                  Add
+                </Button>
+              </div>
+              
+              {tiktokAds.length === 0 ? (
+                <div className="text-center py-8">
+                  <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center mx-auto mb-3">
+                    <Megaphone className="w-6 h-6 text-muted-foreground" />
+                  </div>
+                  <h4 className="text-sm font-medium text-foreground mb-1">No TikTok Ads</h4>
+                  <p className="text-xs text-muted-foreground">Add campaigns to track ad spending</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {tiktokAds.map((ad) => (
+                    <div
+                      key={ad.id}
+                      className="flex items-center justify-between p-3 rounded-lg bg-muted/50 border border-border"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-info/10 flex items-center justify-center">
+                          <Megaphone className="w-4 h-4 text-info" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-foreground">{ad.name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {formatDate(ad.date)}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-semibold text-foreground">
+                          {formatCurrency(ad.price)}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
+      </Card>
+
+      {/* Dialogs */}
+      <AddSubscriptionDialog 
+        open={showAddSubscriptionDialog} 
+        onOpenChange={setShowAddSubscriptionDialog} 
+      />
+      
+      <AddTikTokAdDialog 
+        open={showAddTikTokAdDialog} 
+        onOpenChange={setShowAddTikTokAdDialog} 
+      />
     </div>
   );
 };

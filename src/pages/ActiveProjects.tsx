@@ -31,6 +31,7 @@ const ActiveProjects = () => {
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [deletingProject, setDeletingProject] = useState<Project | null>(null);
+  const [completingProject, setCompletingProject] = useState<Project | null>(null);
   
   const activeProjects = getActiveProjects();
 
@@ -49,8 +50,15 @@ const ActiveProjects = () => {
     return label === 'In-House' ? 'default' : 'secondary';
   };
 
-  const handleCompleteProject = (id: string) => {
-    completeProject(id);
+  const handleCompleteProject = (project: Project) => {
+    setCompletingProject(project);
+  };
+
+  const confirmComplete = () => {
+    if (completingProject) {
+      completeProject(completingProject.id);
+      setCompletingProject(null);
+    }
   };
 
   const handleDeleteProject = (project: Project) => {
@@ -215,7 +223,7 @@ const ActiveProjects = () => {
                           <Button
                             size="sm"
                             variant="ghost"
-                            onClick={() => handleCompleteProject(project.id)}
+                            onClick={() => handleCompleteProject(project)}
                             className="hover:bg-success/10 hover:text-success"
                           >
                             <CheckCircle className="w-4 h-4" />
@@ -269,6 +277,27 @@ const ActiveProjects = () => {
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Complete Project Confirmation */}
+      <AlertDialog open={!!completingProject} onOpenChange={(open) => !open && setCompletingProject(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Complete Project</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to mark "{completingProject?.name}" as completed? This will move it to the completed projects section.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmComplete}
+              className="bg-success text-success-foreground hover:bg-success/90"
+            >
+              Complete
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

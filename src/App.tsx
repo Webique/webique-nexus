@@ -7,6 +7,7 @@ import { DashboardLayout } from "./components/layout/DashboardLayout";
 import ActiveProjects from "./pages/ActiveProjects";
 import CompletedProjects from "./pages/CompletedProjects";
 import Finance from "./pages/Finance";
+import Notes from "./pages/Notes";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -31,6 +32,11 @@ const App = () => (
           <Route path="/finance" element={
             <DashboardLayout>
               <Finance />
+            </DashboardLayout>
+          } />
+          <Route path="/notes" element={
+            <DashboardLayout>
+              <Notes />
             </DashboardLayout>
           } />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

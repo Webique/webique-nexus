@@ -19,11 +19,29 @@ export interface Project {
   createdAt: string;
 }
 
+export interface Subscription {
+  id: string;
+  name: string;
+  price: number;
+  date: string;
+  createdAt: string;
+}
+
+export interface TikTokAd {
+  id: string;
+  name: string;
+  price: number;
+  date: string;
+  createdAt: string;
+}
+
 export interface FinanceOverview {
   totalRevenue: number;
   totalAmountReceived: number;
   totalRemainingAmount: number;
   totalCosts: number;
+  totalSubscriptionCosts: number;
+  totalTikTokAdCosts: number;
   totalProfit: number;
 }
 

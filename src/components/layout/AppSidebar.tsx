@@ -3,7 +3,8 @@ import {
   BarChart3, 
   CheckSquare, 
   Layers, 
-  Menu
+  Menu,
+  StickyNote
 } from "lucide-react";
 import {
   Sidebar,
@@ -36,6 +37,12 @@ const navigationItems = [
     url: "/finance", 
     icon: BarChart3,
     description: "Revenue & profit overview"
+  },
+  { 
+    title: "Notes", 
+    url: "/notes", 
+    icon: StickyNote,
+    description: "Important notes & daily tasks"
   },
 ];
 

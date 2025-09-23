@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Edit, Trash2, ExternalLink, Eye, CheckCircle } from "lucide-react";
+import { Edit, Trash2, ExternalLink, Eye, CheckCircle, Copy } from "lucide-react";
 import { useProjects } from "@/contexts/ProjectContext";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -57,6 +57,15 @@ const CompletedProjects = () => {
     if (deletingProject) {
       deleteProject(deletingProject.id);
       setDeletingProject(null);
+    }
+  };
+
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      // You could add a toast notification here if you have one set up
+    } catch (err) {
+      console.error('Failed to copy text: ', err);
     }
   };
 
@@ -168,15 +177,26 @@ const CompletedProjects = () => {
                       </TableCell>
                       <TableCell>
                         {project.websiteLink && (
-                          <a 
-                            href={project.websiteLink.startsWith('http') ? project.websiteLink : `https://${project.websiteLink}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-primary hover:underline flex items-center gap-1"
-                          >
-                            Website
-                            <ExternalLink className="w-3 h-3" />
-                          </a>
+                          <div className="flex items-center gap-2">
+                            <a 
+                              href={project.websiteLink.startsWith('http') ? project.websiteLink : `https://${project.websiteLink}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-primary hover:underline flex items-center gap-1"
+                            >
+                              Website
+                              <ExternalLink className="w-3 h-3" />
+                            </a>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => copyToClipboard(project.websiteLink.startsWith('http') ? project.websiteLink : `https://${project.websiteLink}`)}
+                              className="h-6 w-6 p-0 hover:bg-muted"
+                              title="Copy website link"
+                            >
+                              <Copy className="w-3 h-3" />
+                            </Button>
+                          </div>
                         )}
                       </TableCell>
                       <TableCell className="font-medium">{formatCurrency(project.totalAmount || 0)}</TableCell>
