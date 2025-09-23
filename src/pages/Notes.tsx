@@ -258,6 +258,16 @@ const Notes = () => {
     isTodayColumn?: boolean; 
   }) => {
     const tasks = getTasksForDate(date);
+    const sortedTasks = [...tasks].sort((a: any, b: any) => {
+      // Incomplete (false) first, completed (true) last
+      const ca = Boolean(a.completed) ? 1 : 0;
+      const cb = Boolean(b.completed) ? 1 : 0;
+      if (ca !== cb) return ca - cb;
+      // For stable ordering inside groups, newest first by createdAt
+      const da = new Date(a.createdAt).getTime();
+      const db = new Date(b.createdAt).getTime();
+      return db - da;
+    });
     const dateString = formatDateForStorage(date);
     const isCurrentDay = isToday(date);
 
@@ -313,7 +323,7 @@ const Notes = () => {
               <p className="text-xs">No tasks for this day</p>
             </div>
           ) : (
-            tasks.map((task) => (
+            sortedTasks.map((task) => (
               <div
                 key={task.id}
                 draggable
