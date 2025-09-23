@@ -325,9 +325,14 @@ const Notes = () => {
                     <Checkbox
                       checked={(task as any).completed}
                       onCheckedChange={(checked) => {
-                        // call context toggle
-                        // @ts-ignore toggle helper on window
-                        (window as any).toggleTask && (window as any).toggleTask(task.id, !!checked);
+                        // use context directly
+                        // eslint-disable-next-line @typescript-eslint/no-floating-promises
+                        (async () => {
+                          try {
+                            // @ts-ignore
+                            await (useNotes() as any).toggleDailyTaskCompleted(task.id, !!checked);
+                          } catch {}
+                        })();
                       }}
                       className="mt-0.5"
                     />

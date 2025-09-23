@@ -9,6 +9,7 @@ export interface DailyTask {
   id: string;
   content: string;
   date: string; // ISO date string (YYYY-MM-DD)
+  completed?: boolean;
   createdAt: string;
   updatedAt: string;
 }

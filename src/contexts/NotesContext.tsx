@@ -356,6 +356,7 @@ export const NotesProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     updateDailyTask,
     moveDailyTask,
     deleteDailyTask,
+    toggleDailyTaskCompleted,
   };
 
   return (
