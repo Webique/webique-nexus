@@ -32,13 +32,17 @@ export default function Calculator() {
     const FREELANCER_MANAGER_COST = 50; // Manager cost per project
     const FREELANCER_COST = 310; // Freelancer cost per project
     
-    // Cost per project
-    const IN_HOUSE_COST_PER_PROJECT = PROJECT_REVENUE - DOMAIN_COST; // 790 SAR
-    const FREELANCER_COST_PER_PROJECT = FREELANCER_MANAGER_COST + FREELANCER_COST; // 360 SAR
-    
-    // Calculate how many projects needed to break even
-    const inHouseBreakEven = Math.ceil(price / IN_HOUSE_COST_PER_PROJECT);
-    const freelancerBreakEven = Math.ceil(price / FREELANCER_COST_PER_PROJECT);
+    // Profit per project
+    const IN_HOUSE_PROFIT_PER_PROJECT = PROJECT_REVENUE - DOMAIN_COST; // 790 SAR
+    const FREELANCER_PROFIT_PER_PROJECT = PROJECT_REVENUE - (DOMAIN_COST + FREELANCER_MANAGER_COST + FREELANCER_COST); // 430 SAR
+
+    // Cash cost per project
+    const IN_HOUSE_COST_PER_PROJECT = DOMAIN_COST; // 100 SAR
+    const FREELANCER_COST_PER_PROJECT = DOMAIN_COST + FREELANCER_MANAGER_COST + FREELANCER_COST; // 460 SAR
+
+    // Calculate how many projects needed to break even (cover campaign with profit)
+    const inHouseBreakEven = Math.ceil(price / IN_HOUSE_PROFIT_PER_PROJECT);
+    const freelancerBreakEven = Math.ceil(price / FREELANCER_PROFIT_PER_PROJECT);
     
     // Calculate costs and revenues for break-even
     const inHouseCost = inHouseBreakEven * IN_HOUSE_COST_PER_PROJECT;
@@ -73,7 +77,7 @@ export default function Calculator() {
               Campaign Input
             </CardTitle>
             <CardDescription>
-              Enter your TikTok ad campaign budget to calculate project distribution
+              Enter your TikTok ad campaign budget to calculate break-even projects
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -92,7 +96,7 @@ export default function Calculator() {
             <div className="space-y-2 text-sm text-muted-foreground">
               <p><strong>Project Assumptions:</strong></p>
               <ul className="list-disc list-inside space-y-1 ml-4">
-                <li>Project cost: 890 SAR</li>
+                <li>Project revenue: 890 SAR</li>
                 <li>Domain cost: 100 SAR per project</li>
                 <li>Freelancer manager: 50 SAR per project</li>
                 <li>Freelancer: 310 SAR per project</li>
@@ -197,14 +201,14 @@ export default function Calculator() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <p className="text-muted-foreground mb-2">
-                    <strong>In-House Projects:</strong> Cost 790 SAR per project (890 revenue - 100 domain cost). 
-                    Profit: 100 SAR per project (11.2% margin).
+                    <strong>In-House Projects:</strong> Cost 100 SAR per project (domain). 
+                    Profit: 790 SAR per project.
                   </p>
                 </div>
                 <div>
                   <p className="text-muted-foreground mb-2">
-                    <strong>Freelancer Projects:</strong> Cost 360 SAR per project (50 manager + 310 freelancer). 
-                    Profit: 530 SAR per project (59.6% margin).
+                    <strong>Freelancer Projects:</strong> Cost 460 SAR per project (100 domain + 50 manager + 310 freelancer). 
+                    Profit: 430 SAR per project.
                   </p>
                 </div>
               </div>
@@ -214,10 +218,10 @@ export default function Calculator() {
               <h4 className="font-semibold mb-2">Example: 1,290 SAR Campaign</h4>
               <div className="space-y-2 text-sm">
                 <div className="p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                  <p><strong>In-House Break-Even:</strong> Need 2 projects (Cost: 1,580 SAR, Revenue: 1,780 SAR, Profit: 200 SAR)</p>
+                  <p><strong>In-House Break-Even:</strong> Need 2 projects (Cost: 200 SAR, Revenue: 1,780 SAR, Profit: 1,580 SAR)</p>
                 </div>
                 <div className="p-3 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-200 dark:border-green-800">
-                  <p><strong>Freelancer Break-Even:</strong> Need 4 projects (Cost: 1,440 SAR, Revenue: 3,560 SAR, Profit: 2,120 SAR)</p>
+                  <p><strong>Freelancer Break-Even:</strong> Need 3 projects (Cost: 1,380 SAR, Revenue: 2,670 SAR, Profit: 1,290 SAR)</p>
                 </div>
               </div>
             </div>
