@@ -26,13 +26,16 @@ import { AddSubscriptionDialog } from "@/components/subscriptions/AddSubscriptio
 import { AddTikTokAdDialog } from "@/components/tiktok-ads/AddTikTokAdDialog";
 import { DollarSign, TrendingUp, TrendingDown, BarChart3, Calendar, Filter, ChevronDown, ChevronRight, Plus, CreditCard, Megaphone } from "lucide-react";
 import { useState, useMemo } from "react";
+import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
 
 const Finance = () => {
   const { getFinanceOverview, getProjectFinances, subscriptions, tiktokAds } = useProjects();
   const [dateFilter, setDateFilter] = useState<string>("all");
-  const [projectBreakdownOpen, setProjectBreakdownOpen] = useState<boolean>(false);
+  const [projectBreakdownOpen, setProjectBreakdownOpen] = useState<boolean>(true);
   const [subscriptionsOpen, setSubscriptionsOpen] = useState<boolean>(false);
   const [tiktokAdsOpen, setTiktokAdsOpen] = useState<boolean>(false);
+  const [subsSort, setSubsSort] = useState<'desc'|'asc'>('desc');
+  const [adsSort, setAdsSort] = useState<'desc'|'asc'>('desc');
   const [showAddSubscriptionDialog, setShowAddSubscriptionDialog] = useState<boolean>(false);
   const [showAddTikTokAdDialog, setShowAddTikTokAdDialog] = useState<boolean>(false);
   
@@ -92,6 +95,26 @@ const Finance = () => {
   
   const overview = dateFilter === "all" ? getFinanceOverview() : filteredOverview;
   const projectFinances = filteredProjectFinances;
+
+  const sortedSubscriptions = useMemo(() => {
+    const arr = [...subscriptions];
+    arr.sort((a, b) => {
+      const da = new Date(a.date).getTime();
+      const db = new Date(b.date).getTime();
+      return subsSort === 'desc' ? db - da : da - db;
+    });
+    return arr;
+  }, [subscriptions, subsSort]);
+
+  const sortedAds = useMemo(() => {
+    const arr = [...tiktokAds];
+    arr.sort((a, b) => {
+      const da = new Date(a.date).getTime();
+      const db = new Date(b.date).getTime();
+      return adsSort === 'desc' ? db - da : da - db;
+    });
+    return arr;
+  }, [tiktokAds, adsSort]);
   
   const profitMargin = overview.totalRevenue > 0 ? (overview.totalProfit / overview.totalRevenue) * 100 : 0;
 
@@ -258,7 +281,7 @@ const Finance = () => {
         </div>
       </Card>
 
-      {/* Project Breakdown Section */}
+      {/* Project Breakdown Section (Active on top) */}
       <Card className="bg-gradient-card border-border">
         <Collapsible open={projectBreakdownOpen} onOpenChange={setProjectBreakdownOpen}>
           <CollapsibleTrigger asChild>
@@ -320,7 +343,14 @@ const Finance = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {projectFinances.map((project) => (
+                      {[...projectFinances].sort((a,b) => {
+                        // Active above completed
+                        if (a.status !== b.status) return a.status === 'active' ? -1 : 1;
+                        // Within each group, newest first
+                        const da = new Date(a.finishedDate || a.createdAt).getTime();
+                        const db = new Date(b.finishedDate || b.createdAt).getTime();
+                        return db - da;
+                      }).map((project) => (
                         <TableRow key={project.id} className="hover:bg-muted/50 transition-colors">
                           <TableCell className="font-medium">{project.name}</TableCell>
                           <TableCell className="text-muted-foreground">
@@ -418,14 +448,23 @@ const Finance = () => {
             <div className="px-6 pb-6">
               <div className="flex justify-between items-center mb-4">
                 <h4 className="text-sm font-medium text-foreground">Subscription Details</h4>
-                <Button
-                  size="sm"
-                  onClick={() => setShowAddSubscriptionDialog(true)}
-                  className="h-8 px-3"
-                >
-                  <Plus className="w-4 h-4 mr-1" />
-                  Add
-                </Button>
+                <div className="flex items-center gap-3">
+                  <Select value={subsSort} onValueChange={(v) => setSubsSort(v as 'desc'|'asc')}>
+                    <SelectTrigger className="h-8 w-40"><SelectValue placeholder="Sort by date" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="desc">Newest first</SelectItem>
+                      <SelectItem value="asc">Oldest first</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    size="sm"
+                    onClick={() => setShowAddSubscriptionDialog(true)}
+                    className="h-8 px-3"
+                  >
+                    <Plus className="w-4 h-4 mr-1" />
+                    Add
+                  </Button>
+                </div>
               </div>
               
               {subscriptions.length === 0 ? (
@@ -438,7 +477,7 @@ const Finance = () => {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {subscriptions.map((subscription) => (
+                  {sortedSubscriptions.map((subscription) => (
                     <div
                       key={subscription.id}
                       className="flex items-center justify-between p-3 rounded-lg bg-muted/50 border border-border"
@@ -506,14 +545,23 @@ const Finance = () => {
             <div className="px-6 pb-6">
               <div className="flex justify-between items-center mb-4">
                 <h4 className="text-sm font-medium text-foreground">Campaign Details</h4>
-                <Button
-                  size="sm"
-                  onClick={() => setShowAddTikTokAdDialog(true)}
-                  className="h-8 px-3"
-                >
-                  <Plus className="w-4 h-4 mr-1" />
-                  Add
-                </Button>
+                <div className="flex items-center gap-3">
+                  <Select value={adsSort} onValueChange={(v) => setAdsSort(v as 'desc'|'asc')}>
+                    <SelectTrigger className="h-8 w-40"><SelectValue placeholder="Sort by date" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="desc">Newest first</SelectItem>
+                      <SelectItem value="asc">Oldest first</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    size="sm"
+                    onClick={() => setShowAddTikTokAdDialog(true)}
+                    className="h-8 px-3"
+                  >
+                    <Plus className="w-4 h-4 mr-1" />
+                    Add
+                  </Button>
+                </div>
               </div>
               
               {tiktokAds.length === 0 ? (
@@ -526,7 +574,7 @@ const Finance = () => {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {tiktokAds.map((ad) => (
+                  {sortedAds.map((ad) => (
                     <div
                       key={ad.id}
                       className="flex items-center justify-between p-3 rounded-lg bg-muted/50 border border-border"

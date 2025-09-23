@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Edit, Trash2, ExternalLink, Eye, CheckCircle, Copy } from "lucide-react";
 import { useProjects } from "@/contexts/ProjectContext";
 import { Button } from "@/components/ui/button";
+import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -33,6 +34,16 @@ const CompletedProjects = () => {
   const [deletingProject, setDeletingProject] = useState<Project | null>(null);
   
   const completedProjects = getCompletedProjects();
+  const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
+  const sortedCompleted = useMemo(() => {
+    const arr = [...completedProjects];
+    arr.sort((a, b) => {
+      const da = new Date(a.finishedDate || a.createdAt).getTime();
+      const db = new Date(b.finishedDate || b.createdAt).getTime();
+      return sortOrder === 'desc' ? db - da : da - db;
+    });
+    return arr;
+  }, [completedProjects, sortOrder]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -90,6 +101,15 @@ const CompletedProjects = () => {
           <p className="text-muted-foreground mt-1">
             View and manage your finished projects
           </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <Select value={sortOrder} onValueChange={(v) => setSortOrder(v as 'desc'|'asc')}>
+            <SelectTrigger className="w-44"><SelectValue placeholder="Sort by date" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="desc">Newest first</SelectItem>
+              <SelectItem value="asc">Oldest first</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
@@ -170,7 +190,7 @@ const CompletedProjects = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {completedProjects.map((project) => (
+                  {sortedCompleted.map((project) => (
                     <TableRow key={project.id} className="hover:bg-muted/50 transition-colors">
                       <TableCell className="font-medium">{project.name}</TableCell>
                       <TableCell>{project.phoneNumber}</TableCell>

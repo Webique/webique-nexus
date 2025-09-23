@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Plus, Edit, CheckCircle, Trash2, ExternalLink } from "lucide-react";
+import { Select, SelectTrigger, SelectContent, SelectValue, SelectItem } from "@/components/ui/select";
 import { useProjects } from "@/contexts/ProjectContext";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -32,8 +33,14 @@ const ActiveProjects = () => {
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [deletingProject, setDeletingProject] = useState<Project | null>(null);
   const [completingProject, setCompletingProject] = useState<Project | null>(null);
+  const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
   
   const activeProjects = getActiveProjects();
+  const sortedActive = [...activeProjects].sort((a, b) => {
+    const da = new Date(a.createdAt).getTime();
+    const db = new Date(b.createdAt).getTime();
+    return sortOrder === 'desc' ? db - da : da - db;
+  });
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -95,13 +102,22 @@ const ActiveProjects = () => {
             Manage your ongoing projects and track progress
           </p>
         </div>
-        <Button 
-          onClick={() => setShowAddDialog(true)}
-          className="bg-gradient-primary hover:shadow-bronze transition-all duration-300"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Add Project
-        </Button>
+        <div className="flex items-center gap-3">
+          <Select value={sortOrder} onValueChange={(v) => setSortOrder(v as 'desc'|'asc')}>
+            <SelectTrigger className="w-44"><SelectValue placeholder="Sort by date" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="desc">Newest first</SelectItem>
+              <SelectItem value="asc">Oldest first</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button 
+            onClick={() => setShowAddDialog(true)}
+            className="bg-gradient-primary hover:shadow-bronze transition-all duration-300"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Add Project
+          </Button>
+        </div>
       </div>
 
       {/* Statistics */}
@@ -182,7 +198,7 @@ const ActiveProjects = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {activeProjects.map((project) => (
+                  {sortedActive.map((project) => (
                     <TableRow key={project.id} className="hover:bg-muted/50 transition-colors">
                       <TableCell className="font-medium">{project.name}</TableCell>
                       <TableCell>{project.phoneNumber}</TableCell>
