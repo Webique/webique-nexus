@@ -187,6 +187,7 @@ const ActiveProjects = () => {
                   <TableRow>
                     <TableHead>Project Name</TableHead>
                     <TableHead>Phone Number</TableHead>
+                    <TableHead>Notes</TableHead>
                     <TableHead>Instagram</TableHead>
                     <TableHead>Website</TableHead>
                     <TableHead>Total Amount</TableHead>
@@ -202,6 +203,15 @@ const ActiveProjects = () => {
                     <TableRow key={project.id} className="hover:bg-muted/50 transition-colors">
                       <TableCell className="font-medium">{project.name}</TableCell>
                       <TableCell>{project.phoneNumber}</TableCell>
+                      <TableCell className="max-w-[280px]">
+                        {project.notes ? (
+                          <div className="text-sm text-foreground truncate" title={project.notes}>
+                            {project.notes}
+                          </div>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">—</span>
+                        )}
+                      </TableCell>
                       <TableCell>
                         {project.instagram && (
                           <a 
