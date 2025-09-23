@@ -5,22 +5,14 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Calculator as CalculatorIcon, DollarSign, Users, User, Building2 } from "lucide-react";
 
-interface ProjectScenario {
-  name: string;
-  description: string;
-  inHouseProjects: number;
-  freelancerProjects: number;
-  totalProjects: number;
-  totalCost: number;
-  totalRevenue: number;
-  profit: number;
-  profitMargin: number;
-  color: string;
-}
-
 interface CalculationResult {
   campaignPrice: number;
-  scenarios: ProjectScenario[];
+  inHouseBreakEven: number;
+  freelancerBreakEven: number;
+  inHouseCost: number;
+  freelancerCost: number;
+  inHouseRevenue: number;
+  freelancerRevenue: number;
 }
 
 export default function Calculator() {
@@ -41,118 +33,27 @@ export default function Calculator() {
     const FREELANCER_COST = 310; // Freelancer cost per project
     
     // Cost per project
-    const IN_HOUSE_COST_PER_PROJECT = PROJECT_REVENUE - DOMAIN_COST; // 790 SAR (break-even)
+    const IN_HOUSE_COST_PER_PROJECT = PROJECT_REVENUE - DOMAIN_COST; // 790 SAR
     const FREELANCER_COST_PER_PROJECT = FREELANCER_MANAGER_COST + FREELANCER_COST; // 360 SAR
     
-    // Profit per project
-    const IN_HOUSE_PROFIT_PER_PROJECT = PROJECT_REVENUE - IN_HOUSE_COST_PER_PROJECT; // 100 SAR
-    const FREELANCER_PROFIT_PER_PROJECT = PROJECT_REVENUE - FREELANCER_COST_PER_PROJECT; // 530 SAR
+    // Calculate how many projects needed to break even
+    const inHouseBreakEven = Math.ceil(price / IN_HOUSE_COST_PER_PROJECT);
+    const freelancerBreakEven = Math.ceil(price / FREELANCER_COST_PER_PROJECT);
     
-    const scenarios: ProjectScenario[] = [];
-    
-    // Scenario 1: Break-even (0 profit)
-    const breakEvenInHouse = Math.floor(price / IN_HOUSE_COST_PER_PROJECT);
-    const breakEvenFreelancer = Math.floor(price / FREELANCER_COST_PER_PROJECT);
-    
-    scenarios.push({
-      name: "Break-Even",
-      description: "0% profit margin",
-      inHouseProjects: breakEvenInHouse,
-      freelancerProjects: 0,
-      totalProjects: breakEvenInHouse,
-      totalCost: breakEvenInHouse * IN_HOUSE_COST_PER_PROJECT,
-      totalRevenue: breakEvenInHouse * PROJECT_REVENUE,
-      profit: 0,
-      profitMargin: 0,
-      color: "bg-gray-50 dark:bg-gray-950/20 border-gray-200 dark:border-gray-800"
-    });
-    
-    scenarios.push({
-      name: "Break-Even (Freelancers)",
-      description: "0% profit margin",
-      inHouseProjects: 0,
-      freelancerProjects: breakEvenFreelancer,
-      totalProjects: breakEvenFreelancer,
-      totalCost: breakEvenFreelancer * FREELANCER_COST_PER_PROJECT,
-      totalRevenue: breakEvenFreelancer * PROJECT_REVENUE,
-      profit: 0,
-      profitMargin: 0,
-      color: "bg-gray-50 dark:bg-gray-950/20 border-gray-200 dark:border-gray-800"
-    });
-    
-    // Scenario 2: Little profit (10-20% margin)
-    const littleProfitTarget = price * 0.15; // 15% profit target
-    const littleProfitInHouse = Math.floor((price - littleProfitTarget) / IN_HOUSE_COST_PER_PROJECT);
-    const littleProfitFreelancer = Math.floor((price - littleProfitTarget) / FREELANCER_COST_PER_PROJECT);
-    
-    if (littleProfitInHouse > 0) {
-      scenarios.push({
-        name: "Little Profit (In-House)",
-        description: "~15% profit margin",
-        inHouseProjects: littleProfitInHouse,
-        freelancerProjects: 0,
-        totalProjects: littleProfitInHouse,
-        totalCost: littleProfitInHouse * IN_HOUSE_COST_PER_PROJECT,
-        totalRevenue: littleProfitInHouse * PROJECT_REVENUE,
-        profit: littleProfitInHouse * IN_HOUSE_PROFIT_PER_PROJECT,
-        profitMargin: littleProfitInHouse > 0 ? (littleProfitInHouse * IN_HOUSE_PROFIT_PER_PROJECT) / (littleProfitInHouse * PROJECT_REVENUE) * 100 : 0,
-        color: "bg-yellow-50 dark:bg-yellow-950/20 border-yellow-200 dark:border-yellow-800"
-      });
-    }
-    
-    if (littleProfitFreelancer > 0) {
-      scenarios.push({
-        name: "Little Profit (Freelancers)",
-        description: "~15% profit margin",
-        inHouseProjects: 0,
-        freelancerProjects: littleProfitFreelancer,
-        totalProjects: littleProfitFreelancer,
-        totalCost: littleProfitFreelancer * FREELANCER_COST_PER_PROJECT,
-        totalRevenue: littleProfitFreelancer * PROJECT_REVENUE,
-        profit: littleProfitFreelancer * FREELANCER_PROFIT_PER_PROJECT,
-        profitMargin: littleProfitFreelancer > 0 ? (littleProfitFreelancer * FREELANCER_PROFIT_PER_PROJECT) / (littleProfitFreelancer * PROJECT_REVENUE) * 100 : 0,
-        color: "bg-yellow-50 dark:bg-yellow-950/20 border-yellow-200 dark:border-yellow-800"
-      });
-    }
-    
-    // Scenario 3: High profit (30%+ margin)
-    const highProfitTarget = price * 0.3; // 30% profit target
-    const highProfitInHouse = Math.floor((price - highProfitTarget) / IN_HOUSE_COST_PER_PROJECT);
-    const highProfitFreelancer = Math.floor((price - highProfitTarget) / FREELANCER_COST_PER_PROJECT);
-    
-    if (highProfitInHouse > 0) {
-      scenarios.push({
-        name: "High Profit (In-House)",
-        description: "~30% profit margin",
-        inHouseProjects: highProfitInHouse,
-        freelancerProjects: 0,
-        totalProjects: highProfitInHouse,
-        totalCost: highProfitInHouse * IN_HOUSE_COST_PER_PROJECT,
-        totalRevenue: highProfitInHouse * PROJECT_REVENUE,
-        profit: highProfitInHouse * IN_HOUSE_PROFIT_PER_PROJECT,
-        profitMargin: highProfitInHouse > 0 ? (highProfitInHouse * IN_HOUSE_PROFIT_PER_PROJECT) / (highProfitInHouse * PROJECT_REVENUE) * 100 : 0,
-        color: "bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800"
-      });
-    }
-    
-    if (highProfitFreelancer > 0) {
-      scenarios.push({
-        name: "High Profit (Freelancers)",
-        description: "~30% profit margin",
-        inHouseProjects: 0,
-        freelancerProjects: highProfitFreelancer,
-        totalProjects: highProfitFreelancer,
-        totalCost: highProfitFreelancer * FREELANCER_COST_PER_PROJECT,
-        totalRevenue: highProfitFreelancer * PROJECT_REVENUE,
-        profit: highProfitFreelancer * FREELANCER_PROFIT_PER_PROJECT,
-        profitMargin: highProfitFreelancer > 0 ? (highProfitFreelancer * FREELANCER_PROFIT_PER_PROJECT) / (highProfitFreelancer * PROJECT_REVENUE) * 100 : 0,
-        color: "bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800"
-      });
-    }
+    // Calculate costs and revenues for break-even
+    const inHouseCost = inHouseBreakEven * IN_HOUSE_COST_PER_PROJECT;
+    const freelancerCost = freelancerBreakEven * FREELANCER_COST_PER_PROJECT;
+    const inHouseRevenue = inHouseBreakEven * PROJECT_REVENUE;
+    const freelancerRevenue = freelancerBreakEven * PROJECT_REVENUE;
 
     setResult({
       campaignPrice: price,
-      scenarios: scenarios.filter(s => s.totalProjects > 0)
+      inHouseBreakEven,
+      freelancerBreakEven,
+      inHouseCost,
+      freelancerCost,
+      inHouseRevenue,
+      freelancerRevenue
     });
   };
 
@@ -211,66 +112,74 @@ export default function Calculator() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Building2 className="w-5 h-5" />
-                Project Scenarios
+                Break-Even Analysis
               </CardTitle>
               <CardDescription>
-                Different profit scenarios for {result.campaignPrice.toLocaleString()} SAR campaign
+                Projects needed to break even with {result.campaignPrice.toLocaleString()} SAR campaign
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              {result.scenarios.map((scenario, index) => (
-                <div key={index} className={`p-4 rounded-lg border ${scenario.color}`}>
-                  <div className="flex items-center justify-between mb-3">
-                    <h4 className="font-semibold text-lg">{scenario.name}</h4>
-                    <span className="text-sm text-muted-foreground">{scenario.description}</span>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-4 mb-4">
-                    <div className="flex items-center gap-2">
-                      <Building2 className="w-4 h-4 text-blue-600" />
-                      <span className="text-sm">In-House:</span>
-                      <span className="font-bold">{scenario.inHouseProjects}</span>
+            <CardContent className="space-y-6">
+              {/* In-House Projects */}
+              <div className="p-4 rounded-lg border bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800">
+                <div className="flex items-center gap-2 mb-3">
+                  <Building2 className="w-5 h-5 text-blue-600" />
+                  <h4 className="font-semibold text-lg text-blue-900 dark:text-blue-100">In-House Projects</h4>
+                </div>
+                <div className="text-3xl font-bold text-blue-600 mb-2">{result.inHouseBreakEven} Projects</div>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <div className="flex justify-between">
+                      <span>Total Cost:</span>
+                      <span className="font-semibold">{result.inHouseCost.toLocaleString()} SAR</span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Users className="w-4 h-4 text-green-600" />
-                      <span className="text-sm">Freelancers:</span>
-                      <span className="font-bold">{scenario.freelancerProjects}</span>
-                    </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div className="space-y-1">
-                      <div className="flex justify-between">
-                        <span>Total Projects:</span>
-                        <span className="font-semibold">{scenario.totalProjects}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Total Cost:</span>
-                        <span className="font-semibold">{scenario.totalCost.toLocaleString()} SAR</span>
-                      </div>
-                    </div>
-                    <div className="space-y-1">
-                      <div className="flex justify-between">
-                        <span>Total Revenue:</span>
-                        <span className="font-semibold">{scenario.totalRevenue.toLocaleString()} SAR</span>
-                      </div>
-                      <div className="flex justify-between text-green-600">
-                        <span>Profit:</span>
-                        <span className="font-bold">{scenario.profit.toLocaleString()} SAR</span>
-                      </div>
+                    <div className="flex justify-between">
+                      <span>Total Revenue:</span>
+                      <span className="font-semibold">{result.inHouseRevenue.toLocaleString()} SAR</span>
                     </div>
                   </div>
-                  
-                  <div className="mt-3 pt-3 border-t">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">Profit Margin:</span>
-                      <span className={`font-bold text-lg ${scenario.profitMargin > 20 ? 'text-green-600' : scenario.profitMargin > 10 ? 'text-yellow-600' : 'text-gray-600'}`}>
-                        {scenario.profitMargin.toFixed(1)}%
-                      </span>
+                  <div>
+                    <div className="flex justify-between text-green-600">
+                      <span>Profit:</span>
+                      <span className="font-bold">{(result.inHouseRevenue - result.inHouseCost).toLocaleString()} SAR</span>
+                    </div>
+                    <div className="flex justify-between text-green-600">
+                      <span>Margin:</span>
+                      <span className="font-bold">{(((result.inHouseRevenue - result.inHouseCost) / result.inHouseRevenue) * 100).toFixed(1)}%</span>
                     </div>
                   </div>
                 </div>
-              ))}
+              </div>
+
+              {/* Freelancer Projects */}
+              <div className="p-4 rounded-lg border bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800">
+                <div className="flex items-center gap-2 mb-3">
+                  <Users className="w-5 h-5 text-green-600" />
+                  <h4 className="font-semibold text-lg text-green-900 dark:text-green-100">Freelancer Projects</h4>
+                </div>
+                <div className="text-3xl font-bold text-green-600 mb-2">{result.freelancerBreakEven} Projects</div>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <div className="flex justify-between">
+                      <span>Total Cost:</span>
+                      <span className="font-semibold">{result.freelancerCost.toLocaleString()} SAR</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Total Revenue:</span>
+                      <span className="font-semibold">{result.freelancerRevenue.toLocaleString()} SAR</span>
+                    </div>
+                  </div>
+                  <div>
+                    <div className="flex justify-between text-green-600">
+                      <span>Profit:</span>
+                      <span className="font-bold">{(result.freelancerRevenue - result.freelancerCost).toLocaleString()} SAR</span>
+                    </div>
+                    <div className="flex justify-between text-green-600">
+                      <span>Margin:</span>
+                      <span className="font-bold">{(((result.freelancerRevenue - result.freelancerCost) / result.freelancerRevenue) * 100).toFixed(1)}%</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </CardContent>
           </Card>
         )}
@@ -302,19 +211,13 @@ export default function Calculator() {
             </div>
             
             <div>
-              <h4 className="font-semibold mb-2">Profit Scenarios</h4>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="p-3 bg-gray-50 dark:bg-gray-950/20 rounded-lg">
-                  <h5 className="font-semibold text-gray-700 dark:text-gray-300">Break-Even (0% profit)</h5>
-                  <p className="text-xs text-muted-foreground">Maximum projects with 0 profit margin</p>
+              <h4 className="font-semibold mb-2">Example: 1,290 SAR Campaign</h4>
+              <div className="space-y-2 text-sm">
+                <div className="p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                  <p><strong>In-House Break-Even:</strong> Need 2 projects (Cost: 1,580 SAR, Revenue: 1,780 SAR, Profit: 200 SAR)</p>
                 </div>
-                <div className="p-3 bg-yellow-50 dark:bg-yellow-950/20 rounded-lg">
-                  <h5 className="font-semibold text-yellow-700 dark:text-yellow-300">Little Profit (~15%)</h5>
-                  <p className="text-xs text-muted-foreground">Moderate projects with small profit margin</p>
-                </div>
-                <div className="p-3 bg-green-50 dark:bg-green-950/20 rounded-lg">
-                  <h5 className="font-semibold text-green-700 dark:text-green-300">High Profit (~30%)</h5>
-                  <p className="text-xs text-muted-foreground">Fewer projects with high profit margin</p>
+                <div className="p-3 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-200 dark:border-green-800">
+                  <p><strong>Freelancer Break-Even:</strong> Need 4 projects (Cost: 1,440 SAR, Revenue: 3,560 SAR, Profit: 2,120 SAR)</p>
                 </div>
               </div>
             </div>
