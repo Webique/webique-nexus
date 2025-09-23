@@ -1,29 +1,29 @@
-import express from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import { ImportantNote, DailyTask, GeneralNote } from '../models/Note';
 
 const router = express.Router();
 
 // Important Notes Routes
-router.get('/important', async (req, res, next) => {
+router.get('/important', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const notes = await ImportantNote.find().sort({ createdAt: -1 });
-    res.json({ success: true, data: notes });
+    return res.json({ success: true, data: notes });
   } catch (error) {
-    next(error);
+    return next(error);
   }
 });
 
-router.post('/important', async (req, res, next) => {
+router.post('/important', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const note = new ImportantNote(req.body);
     await note.save();
-    res.status(201).json({ success: true, data: note });
+    return res.status(201).json({ success: true, data: note });
   } catch (error) {
-    next(error);
+    return next(error);
   }
 });
 
-router.put('/important/:id', async (req, res, next) => {
+router.put('/important/:id', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const note = await ImportantNote.findByIdAndUpdate(
       req.params.id,
@@ -38,13 +38,13 @@ router.put('/important/:id', async (req, res, next) => {
       });
     }
     
-    res.json({ success: true, data: note });
+    return res.json({ success: true, data: note });
   } catch (error) {
-    next(error);
+    return next(error);
   }
 });
 
-router.delete('/important/:id', async (req, res, next) => {
+router.delete('/important/:id', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const note = await ImportantNote.findByIdAndDelete(req.params.id);
     
@@ -55,14 +55,14 @@ router.delete('/important/:id', async (req, res, next) => {
       });
     }
     
-    res.json({ success: true, message: 'Important note deleted successfully' });
+    return res.json({ success: true, message: 'Important note deleted successfully' });
   } catch (error) {
-    next(error);
+    return next(error);
   }
 });
 
 // Daily Tasks Routes
-router.get('/daily-tasks', async (req, res, next) => {
+router.get('/daily-tasks', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { date } = req.query;
     let query: any = {};
@@ -75,23 +75,23 @@ router.get('/daily-tasks', async (req, res, next) => {
     }
     
     const tasks = await DailyTask.find(query).sort({ createdAt: -1 });
-    res.json({ success: true, data: tasks });
+    return res.json({ success: true, data: tasks });
   } catch (error) {
-    next(error);
+    return next(error);
   }
 });
 
-router.post('/daily-tasks', async (req, res, next) => {
+router.post('/daily-tasks', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const task = new DailyTask(req.body);
     await task.save();
-    res.status(201).json({ success: true, data: task });
+    return res.status(201).json({ success: true, data: task });
   } catch (error) {
-    next(error);
+    return next(error);
   }
 });
 
-router.put('/daily-tasks/:id', async (req, res, next) => {
+router.put('/daily-tasks/:id', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const task = await DailyTask.findByIdAndUpdate(
       req.params.id,
@@ -106,13 +106,13 @@ router.put('/daily-tasks/:id', async (req, res, next) => {
       });
     }
     
-    res.json({ success: true, data: task });
+    return res.json({ success: true, data: task });
   } catch (error) {
-    next(error);
+    return next(error);
   }
 });
 
-router.delete('/daily-tasks/:id', async (req, res, next) => {
+router.delete('/daily-tasks/:id', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const task = await DailyTask.findByIdAndDelete(req.params.id);
     
@@ -123,33 +123,33 @@ router.delete('/daily-tasks/:id', async (req, res, next) => {
       });
     }
     
-    res.json({ success: true, message: 'Daily task deleted successfully' });
+    return res.json({ success: true, message: 'Daily task deleted successfully' });
   } catch (error) {
-    next(error);
+    return next(error);
   }
 });
 
 // General Notes Routes
-router.get('/general', async (req, res, next) => {
+router.get('/general', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const notes = await GeneralNote.find().sort({ createdAt: -1 });
-    res.json({ success: true, data: notes });
+    return res.json({ success: true, data: notes });
   } catch (error) {
-    next(error);
+    return next(error);
   }
 });
 
-router.post('/general', async (req, res, next) => {
+router.post('/general', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const note = new GeneralNote(req.body);
     await note.save();
-    res.status(201).json({ success: true, data: note });
+    return res.status(201).json({ success: true, data: note });
   } catch (error) {
-    next(error);
+    return next(error);
   }
 });
 
-router.put('/general/:id', async (req, res, next) => {
+router.put('/general/:id', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const note = await GeneralNote.findByIdAndUpdate(
       req.params.id,
@@ -164,13 +164,13 @@ router.put('/general/:id', async (req, res, next) => {
       });
     }
     
-    res.json({ success: true, data: note });
+    return res.json({ success: true, data: note });
   } catch (error) {
-    next(error);
+    return next(error);
   }
 });
 
-router.delete('/general/:id', async (req, res, next) => {
+router.delete('/general/:id', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const note = await GeneralNote.findByIdAndDelete(req.params.id);
     
@@ -181,10 +181,10 @@ router.delete('/general/:id', async (req, res, next) => {
       });
     }
     
-    res.json({ success: true, message: 'General note deleted successfully' });
+    return res.json({ success: true, message: 'General note deleted successfully' });
   } catch (error) {
-    next(error);
+    return next(error);
   }
 });
 
-export = router;
+export default router;

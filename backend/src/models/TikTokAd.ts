@@ -32,4 +32,4 @@ const TikTokAdSchema = new Schema<ITikTokAd>({
 TikTokAdSchema.index({ date: -1, createdAt: -1 });
 TikTokAdSchema.index({ name: 'text' });
 
-export = mongoose.model<ITikTokAd>('TikTokAd', TikTokAdSchema);
+export default mongoose.model<ITikTokAd>('TikTokAd', TikTokAdSchema);

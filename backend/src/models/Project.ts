@@ -99,7 +99,7 @@ const ProjectSchema = new Schema<IProject>({
 });
 
 // Calculate remaining amount before saving
-ProjectSchema.pre('save', function(next) {
+ProjectSchema.pre('save', function(this: IProject, next) {
   if (this.totalAmount && this.amountReceived) {
     this.remainingAmount = this.totalAmount - this.amountReceived;
   }
@@ -110,4 +110,4 @@ ProjectSchema.pre('save', function(next) {
 ProjectSchema.index({ status: 1, createdAt: -1 });
 ProjectSchema.index({ name: 'text', notes: 'text' });
 
-export = mongoose.model<IProject>('Project', ProjectSchema);
+export default mongoose.model<IProject>('Project', ProjectSchema);

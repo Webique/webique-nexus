@@ -1,10 +1,10 @@
-import express from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import Subscription from '../models/Subscription';
 
 const router = express.Router();
 
 // GET /api/subscriptions - Get all subscriptions
-router.get('/', async (req, res, next) => {
+router.get('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { search, page = 1, limit = 10, startDate, endDate } = req.query;
     
@@ -27,7 +27,7 @@ router.get('/', async (req, res, next) => {
     
     const total = await Subscription.countDocuments(query);
     
-    res.json({
+    return res.json({
       success: true,
       data: subscriptions,
       pagination: {
@@ -37,12 +37,12 @@ router.get('/', async (req, res, next) => {
       }
     });
   } catch (error) {
-    next(error);
+    return next(error);
   }
 });
 
 // GET /api/subscriptions/:id - Get single subscription
-router.get('/:id', async (req, res, next) => {
+router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const subscription = await Subscription.findById(req.params.id);
     
@@ -53,32 +53,32 @@ router.get('/:id', async (req, res, next) => {
       });
     }
     
-    res.json({
+    return res.json({
       success: true,
       data: subscription
     });
   } catch (error) {
-    next(error);
+    return next(error);
   }
 });
 
 // POST /api/subscriptions - Create new subscription
-router.post('/', async (req, res, next) => {
+router.post('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const subscription = new Subscription(req.body);
     await subscription.save();
     
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       data: subscription
     });
   } catch (error) {
-    next(error);
+    return next(error);
   }
 });
 
 // PUT /api/subscriptions/:id - Update subscription
-router.put('/:id', async (req, res, next) => {
+router.put('/:id', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const subscription = await Subscription.findByIdAndUpdate(
       req.params.id,
@@ -93,17 +93,17 @@ router.put('/:id', async (req, res, next) => {
       });
     }
     
-    res.json({
+    return res.json({
       success: true,
       data: subscription
     });
   } catch (error) {
-    next(error);
+    return next(error);
   }
 });
 
 // DELETE /api/subscriptions/:id - Delete subscription
-router.delete('/:id', async (req, res, next) => {
+router.delete('/:id', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const subscription = await Subscription.findByIdAndDelete(req.params.id);
     
@@ -114,17 +114,17 @@ router.delete('/:id', async (req, res, next) => {
       });
     }
     
-    res.json({
+    return res.json({
       success: true,
       message: 'Subscription deleted successfully'
     });
   } catch (error) {
-    next(error);
+    return next(error);
   }
 });
 
 // GET /api/subscriptions/stats/total - Get total subscription costs
-router.get('/stats/total', async (req, res, next) => {
+router.get('/stats/total', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { startDate, endDate } = req.query;
     
@@ -149,7 +149,7 @@ router.get('/stats/total', async (req, res, next) => {
     
     const stats = result[0] || { totalCost: 0, count: 0 };
     
-    res.json({
+    return res.json({
       success: true,
       data: {
         totalCost: stats.totalCost,
@@ -157,8 +157,8 @@ router.get('/stats/total', async (req, res, next) => {
       }
     });
   } catch (error) {
-    next(error);
+    return next(error);
   }
 });
 
-export = router;
+export default router;

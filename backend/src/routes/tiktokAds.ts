@@ -1,10 +1,10 @@
-import express from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import TikTokAd from '../models/TikTokAd';
 
 const router = express.Router();
 
 // GET /api/tiktok-ads - Get all TikTok ads
-router.get('/', async (req, res, next) => {
+router.get('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { search, page = 1, limit = 10, startDate, endDate } = req.query;
     
@@ -27,7 +27,7 @@ router.get('/', async (req, res, next) => {
     
     const total = await TikTokAd.countDocuments(query);
     
-    res.json({
+    return res.json({
       success: true,
       data: tiktokAds,
       pagination: {
@@ -37,12 +37,12 @@ router.get('/', async (req, res, next) => {
       }
     });
   } catch (error) {
-    next(error);
+    return next(error);
   }
 });
 
 // GET /api/tiktok-ads/:id - Get single TikTok ad
-router.get('/:id', async (req, res, next) => {
+router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const tiktokAd = await TikTokAd.findById(req.params.id);
     
@@ -53,32 +53,32 @@ router.get('/:id', async (req, res, next) => {
       });
     }
     
-    res.json({
+    return res.json({
       success: true,
       data: tiktokAd
     });
   } catch (error) {
-    next(error);
+    return next(error);
   }
 });
 
 // POST /api/tiktok-ads - Create new TikTok ad
-router.post('/', async (req, res, next) => {
+router.post('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const tiktokAd = new TikTokAd(req.body);
     await tiktokAd.save();
     
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       data: tiktokAd
     });
   } catch (error) {
-    next(error);
+    return next(error);
   }
 });
 
 // PUT /api/tiktok-ads/:id - Update TikTok ad
-router.put('/:id', async (req, res, next) => {
+router.put('/:id', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const tiktokAd = await TikTokAd.findByIdAndUpdate(
       req.params.id,
@@ -93,17 +93,17 @@ router.put('/:id', async (req, res, next) => {
       });
     }
     
-    res.json({
+    return res.json({
       success: true,
       data: tiktokAd
     });
   } catch (error) {
-    next(error);
+    return next(error);
   }
 });
 
 // DELETE /api/tiktok-ads/:id - Delete TikTok ad
-router.delete('/:id', async (req, res, next) => {
+router.delete('/:id', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const tiktokAd = await TikTokAd.findByIdAndDelete(req.params.id);
     
@@ -114,17 +114,17 @@ router.delete('/:id', async (req, res, next) => {
       });
     }
     
-    res.json({
+    return res.json({
       success: true,
       message: 'TikTok ad deleted successfully'
     });
   } catch (error) {
-    next(error);
+    return next(error);
   }
 });
 
 // GET /api/tiktok-ads/stats/total - Get total TikTok ad costs
-router.get('/stats/total', async (req, res, next) => {
+router.get('/stats/total', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { startDate, endDate } = req.query;
     
@@ -149,7 +149,7 @@ router.get('/stats/total', async (req, res, next) => {
     
     const stats = result[0] || { totalCost: 0, count: 0 };
     
-    res.json({
+    return res.json({
       success: true,
       data: {
         totalCost: stats.totalCost,
@@ -157,8 +157,8 @@ router.get('/stats/total', async (req, res, next) => {
       }
     });
   } catch (error) {
-    next(error);
+    return next(error);
   }
 });
 
-export = router;
+export default router;
