@@ -187,7 +187,6 @@ const ActiveProjects = () => {
                   <TableRow>
                     <TableHead>Project Name</TableHead>
                     <TableHead>Phone Number</TableHead>
-                    <TableHead>Notes</TableHead>
                     <TableHead>Instagram</TableHead>
                     <TableHead>Website</TableHead>
                     <TableHead>Total Amount</TableHead>
@@ -200,19 +199,11 @@ const ActiveProjects = () => {
                 </TableHeader>
                 <TableBody>
                   {sortedActive.map((project) => (
-                    <TableRow key={project.id} className="hover:bg-muted/50 transition-colors">
-                      <TableCell className="font-medium">{project.name}</TableCell>
-                      <TableCell>{project.phoneNumber}</TableCell>
-                      <TableCell className="max-w-[280px]">
-                        {project.notes ? (
-                          <div className="text-sm text-foreground truncate" title={project.notes}>
-                            {project.notes}
-                          </div>
-                        ) : (
-                          <span className="text-xs text-muted-foreground">—</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
+                    <>
+                      <TableRow className="hover:bg-muted/50 transition-colors">
+                        <TableCell className="font-medium">{project.name}</TableCell>
+                        <TableCell>{project.phoneNumber}</TableCell>
+                        <TableCell>
                         {project.instagram && (
                           <a 
                             href={buildInstagramUrl(project.instagram)}
@@ -224,8 +215,8 @@ const ActiveProjects = () => {
                             <ExternalLink className="w-3 h-3" />
                           </a>
                         )}
-                      </TableCell>
-                      <TableCell>
+                        </TableCell>
+                        <TableCell>
                         {project.websiteLink && (
                           <a 
                             href={project.websiteLink.startsWith('http') ? project.websiteLink : `https://${project.websiteLink}`}
@@ -237,47 +228,57 @@ const ActiveProjects = () => {
                             <ExternalLink className="w-3 h-3" />
                           </a>
                         )}
-                      </TableCell>
-                      <TableCell className="font-medium">{formatCurrency(project.totalAmount || 0)}</TableCell>
-                      <TableCell className="text-primary">{formatCurrency(project.amountReceived || 0)}</TableCell>
-                      <TableCell className={`font-medium ${(project.remainingAmount || 0) > 0 ? 'text-warning' : 'text-success'}`}>
-                        {formatCurrency(project.remainingAmount || 0)}
-                      </TableCell>
-                      <TableCell>{project.finishedDate ? formatDate(project.finishedDate) : 'Not completed yet'}</TableCell>
-                      <TableCell>
-                        <Badge variant={getLabelVariant(project.label)}>
-                          {project.label}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center justify-end gap-2">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => setEditingProject(project)}
-                            className="hover:bg-muted"
-                          >
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => handleCompleteProject(project)}
-                            className="hover:bg-success/10 hover:text-success"
-                          >
-                            <CheckCircle className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => handleDeleteProject(project)}
-                            className="hover:bg-destructive/10 hover:text-destructive"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
+                        </TableCell>
+                        <TableCell className="font-medium">{formatCurrency(project.totalAmount || 0)}</TableCell>
+                        <TableCell className="text-primary">{formatCurrency(project.amountReceived || 0)}</TableCell>
+                        <TableCell className={`font-medium ${(project.remainingAmount || 0) > 0 ? 'text-warning' : 'text-success'}`}>
+                          {formatCurrency(project.remainingAmount || 0)}
+                        </TableCell>
+                        <TableCell>{project.finishedDate ? formatDate(project.finishedDate) : 'Not completed yet'}</TableCell>
+                        <TableCell>
+                          <Badge variant={getLabelVariant(project.label)}>
+                            {project.label}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center justify-end gap-2">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => setEditingProject(project)}
+                              className="hover:bg-muted"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleCompleteProject(project)}
+                              className="hover:bg-success/10 hover:text-success"
+                            >
+                              <CheckCircle className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleDeleteProject(project)}
+                              className="hover:bg-destructive/10 hover:text-destructive"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                      {project.notes && (
+                        <TableRow className="bg-muted/30">
+                          <TableCell colSpan={10}>
+                            <div className="px-1 py-2 text-sm text-foreground">
+                              {project.notes}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </>
                   ))}
                 </TableBody>
               </Table>
