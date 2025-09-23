@@ -12,6 +12,7 @@ interface ProjectContextType {
   updateProject: (id: string, updates: Partial<Project>) => Promise<void>;
   deleteProject: (id: string) => Promise<void>;
   completeProject: (id: string) => Promise<void>;
+  reactivateProject: (id: string) => Promise<void>;
   addSubscription: (subscription: Omit<Subscription, 'id' | 'createdAt'>) => Promise<void>;
   updateSubscription: (id: string, updates: Partial<Subscription>) => Promise<void>;
   deleteSubscription: (id: string) => Promise<void>;
@@ -225,6 +226,32 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   }, [toast]);
 
+  const reactivateProject = useCallback(async (id: string) => {
+    try {
+      setLoading(true);
+      const updates = {
+        status: 'active' as const,
+        finishedDate: undefined as unknown as string,
+      };
+      const response = await ApiService.updateProject(id, updates as any);
+      const updated = normalizeProject(response);
+      setProjects(prev => prev.map(project => project.id === id ? updated : project));
+      toast({
+        title: "Project Reactivated",
+        description: "Project has been moved back to active.",
+      });
+    } catch (error) {
+      console.error('Failed to reactivate project:', error);
+      toast({
+        title: "Error",
+        description: "Failed to reactivate project. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [toast]);
+
   // Subscription management
   const addSubscription = useCallback(async (subscriptionData: Omit<Subscription, 'id' | 'createdAt'>) => {
     try {
@@ -424,6 +451,7 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
     updateProject,
     deleteProject,
     completeProject,
+    reactivateProject,
     addSubscription,
     updateSubscription,
     deleteSubscription,

@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Edit, Trash2, ExternalLink, Eye, CheckCircle, Copy } from "lucide-react";
+import { Edit, Trash2, ExternalLink, Eye, CheckCircle, Copy, RotateCcw } from "lucide-react";
 import { useProjects } from "@/contexts/ProjectContext";
 import { Button } from "@/components/ui/button";
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
@@ -28,7 +28,7 @@ import { ProjectDetailsDialog } from "@/components/projects/ProjectDetailsDialog
 import { Project } from "@/types/project";
 
 const CompletedProjects = () => {
-  const { getCompletedProjects, deleteProject } = useProjects();
+  const { getCompletedProjects, deleteProject, reactivateProject } = useProjects();
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [viewingProject, setViewingProject] = useState<Project | null>(null);
   const [deletingProject, setDeletingProject] = useState<Project | null>(null);
@@ -259,6 +259,15 @@ const CompletedProjects = () => {
                             className="hover:bg-muted"
                           >
                             <Edit className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => reactivateProject(project.id)}
+                            className="hover:bg-warning/10 hover:text-warning"
+                            title="Move back to Active"
+                          >
+                            <RotateCcw className="w-4 h-4" />
                           </Button>
                           <Button
                             size="sm"
