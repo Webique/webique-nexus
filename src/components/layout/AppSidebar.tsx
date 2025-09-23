@@ -1,6 +1,7 @@
 import { NavLink, useLocation } from "react-router-dom";
 import { 
   BarChart3, 
+  Calculator,
   CheckSquare, 
   Layers, 
   Menu,
@@ -43,6 +44,12 @@ const navigationItems = [
     url: "/notes", 
     icon: StickyNote,
     description: "Important notes & daily tasks"
+  },
+  { 
+    title: "Calculator", 
+    url: "/calculator", 
+    icon: Calculator,
+    description: "Project cost calculator"
   },
 ];
 
