@@ -72,7 +72,8 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const loadProjects = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await ApiService.getProjects();
+      // Fetch a large page to include all projects (avoid server-side pagination hiding items)
+      const response = await ApiService.getProjects({ page: 1, limit: 1000 });
       // response is an array (ApiService unwraps .data)
       const normalized = Array.isArray(response)
         ? response.map(normalizeProject)
