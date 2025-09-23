@@ -82,19 +82,23 @@ VITE_API_URL=https://your-render-backend-url.onrender.com
    - Make sure you're using the correct root directory (`backend`) in Render
    - Check that all imports are using CommonJS syntax
 
-2. **CORS errors:**
+2. **TypeScript "Cannot find type definition file for 'node'" error:**
+   - This has been fixed with custom type definitions
+   - The build now uses `--noEmit false` flag for better compatibility
+
+3. **CORS errors:**
    - Update `FRONTEND_URL` in your backend environment variables
    - Make sure the URL matches your Netlify domain exactly
 
-3. **Database connection issues:**
+4. **Database connection issues:**
    - Verify your MongoDB connection string
    - Check that your IP is whitelisted in MongoDB Atlas
    - Ensure the database user has proper permissions
 
-4. **Build failures:**
+5. **Build failures:**
    - Check the build logs in Render
-   - Make sure all dependencies are installed
-   - Verify TypeScript compilation is successful
+   - The prebuild script ensures dependencies are installed
+   - TypeScript compilation is now optimized for production
 
 ## 📊 After Deployment
 
