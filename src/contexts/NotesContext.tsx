@@ -37,6 +37,29 @@ export const NotesProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
+  // Normalize MongoDB documents to frontend types
+  const normalizeImportantNote = (doc: any): ImportantNote => ({
+    id: doc.id || doc._id,
+    content: doc.content,
+    createdAt: doc.createdAt || new Date().toISOString(),
+    updatedAt: doc.updatedAt || new Date().toISOString(),
+  });
+
+  const normalizeGeneralNote = (doc: any): GeneralNote => ({
+    id: doc.id || doc._id,
+    content: doc.content,
+    createdAt: doc.createdAt || new Date().toISOString(),
+    updatedAt: doc.updatedAt || new Date().toISOString(),
+  });
+
+  const normalizeDailyTask = (doc: any): DailyTask => ({
+    id: doc.id || doc._id,
+    content: doc.content,
+    date: doc.date ? new Date(doc.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+    createdAt: doc.createdAt || new Date().toISOString(),
+    updatedAt: doc.updatedAt || new Date().toISOString(),
+  });
+
   // Load notes from API on component mount
   useEffect(() => {
     loadImportantNotes();
@@ -47,7 +70,8 @@ export const NotesProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const loadImportantNotes = useCallback(async () => {
     try {
       const response = await ApiService.getImportantNotes();
-      setImportantNotes(response.data || []);
+      const items = Array.isArray(response) ? response : Array.isArray((response as any)?.data) ? (response as any).data : [];
+      setImportantNotes(items.map(normalizeImportantNote));
     } catch (error) {
       console.error('Failed to load important notes:', error);
     }
@@ -56,7 +80,8 @@ export const NotesProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const loadGeneralNotes = useCallback(async () => {
     try {
       const response = await ApiService.getGeneralNotes();
-      setGeneralNotes(response.data || []);
+      const items = Array.isArray(response) ? response : Array.isArray((response as any)?.data) ? (response as any).data : [];
+      setGeneralNotes(items.map(normalizeGeneralNote));
     } catch (error) {
       console.error('Failed to load general notes:', error);
     }
@@ -65,7 +90,8 @@ export const NotesProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const loadDailyTasks = useCallback(async () => {
     try {
       const response = await ApiService.getDailyTasks();
-      setDailyTasks(response.data || []);
+      const items = Array.isArray(response) ? response : Array.isArray((response as any)?.data) ? (response as any).data : [];
+      setDailyTasks(items.map(normalizeDailyTask));
     } catch (error) {
       console.error('Failed to load daily tasks:', error);
     }
@@ -76,7 +102,8 @@ export const NotesProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     try {
       setLoading(true);
       const response = await ApiService.createImportantNote({ content });
-      setImportantNotes(prev => [...prev, response]);
+      const created = normalizeImportantNote(response);
+      setImportantNotes(prev => [...prev, created]);
       toast({
         title: "Important Note Added",
         description: "Your important note has been saved.",
@@ -97,8 +124,9 @@ export const NotesProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     try {
       setLoading(true);
       const response = await ApiService.updateImportantNote(id, { content });
+      const updated = normalizeImportantNote(response);
       setImportantNotes(prev => prev.map(note => 
-        note.id === id ? response : note
+        note.id === id ? updated : note
       ));
       toast({
         title: "Important Note Updated",
@@ -142,7 +170,8 @@ export const NotesProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     try {
       setLoading(true);
       const response = await ApiService.createGeneralNote({ content });
-      setGeneralNotes(prev => [...prev, response]);
+      const created = normalizeGeneralNote(response);
+      setGeneralNotes(prev => [...prev, created]);
       toast({
         title: "General Note Added",
         description: "Your general note has been saved.",
@@ -160,71 +189,140 @@ export const NotesProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, [toast]);
 
   const updateGeneralNote = useCallback(async (id: string, content: string) => {
-    setGeneralNotes(prev => prev.map(note => 
-      note.id === id 
-        ? { ...note, content, updatedAt: new Date().toISOString() }
-        : note
-    ));
-    toast({
-      title: "General Note Updated",
-      description: "Your note has been updated successfully.",
-    });
+    try {
+      setLoading(true);
+      const response = await ApiService.updateGeneralNote(id, { content });
+      const updated = normalizeGeneralNote(response);
+      setGeneralNotes(prev => prev.map(note => 
+        note.id === id ? updated : note
+      ));
+      toast({
+        title: "General Note Updated",
+        description: "Your note has been updated successfully.",
+      });
+    } catch (error) {
+      console.error('Failed to update general note:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update general note. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   }, [toast]);
 
-  const deleteGeneralNote = useCallback((id: string) => {
-    setGeneralNotes(prev => prev.filter(note => note.id !== id));
-    toast({
-      title: "General Note Deleted",
-      description: "Your general note has been removed.",
-    });
+  const deleteGeneralNote = useCallback(async (id: string) => {
+    try {
+      setLoading(true);
+      await ApiService.deleteGeneralNote(id);
+      setGeneralNotes(prev => prev.filter(note => note.id !== id));
+      toast({
+        title: "General Note Deleted",
+        description: "Your general note has been removed.",
+      });
+    } catch (error) {
+      console.error('Failed to delete general note:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete general note. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   }, [toast]);
 
   // Daily Tasks Management
-  const addDailyTask = useCallback((content: string, date: string) => {
-    const newTask: DailyTask = {
-      id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
-      content,
-      date,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    setDailyTasks(prev => [...prev, newTask]);
-    toast({
-      title: "Task Added",
-      description: `Task added for ${new Date(date).toLocaleDateString()}.`,
-    });
+  const addDailyTask = useCallback(async (content: string, date: string) => {
+    try {
+      setLoading(true);
+      const response = await ApiService.createDailyTask({ content, date });
+      const created = normalizeDailyTask(response);
+      setDailyTasks(prev => [...prev, created]);
+      toast({
+        title: "Task Added",
+        description: `Task added for ${new Date(date).toLocaleDateString()}.`,
+      });
+    } catch (error) {
+      console.error('Failed to add daily task:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add daily task. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   }, [toast]);
 
-  const updateDailyTask = useCallback((id: string, content: string) => {
-    setDailyTasks(prev => prev.map(task => 
-      task.id === id 
-        ? { ...task, content, updatedAt: new Date().toISOString() }
-        : task
-    ));
-    toast({
-      title: "Task Updated",
-      description: "Your task has been updated successfully.",
-    });
-  }, [toast]);
+  const updateDailyTask = useCallback(async (id: string, content: string) => {
+    try {
+      setLoading(true);
+      const task = dailyTasks.find(t => t.id === id);
+      if (!task) return;
+      const response = await ApiService.updateDailyTask(id, { content, date: task.date });
+      const updated = normalizeDailyTask(response);
+      setDailyTasks(prev => prev.map(t => t.id === id ? updated : t));
+      toast({
+        title: "Task Updated",
+        description: "Your task has been updated successfully.",
+      });
+    } catch (error) {
+      console.error('Failed to update daily task:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update daily task. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [dailyTasks, toast]);
 
-  const moveDailyTask = useCallback((id: string, newDate: string) => {
-    setDailyTasks(prev => prev.map(task => 
-      task.id === id 
-        ? { ...task, date: newDate, updatedAt: new Date().toISOString() }
-        : task
-    ));
-    toast({
-      title: "Task Moved",
-      description: `Task moved to ${new Date(newDate).toLocaleDateString()}.`,
-    });
-  }, [toast]);
+  const moveDailyTask = useCallback(async (id: string, newDate: string) => {
+    try {
+      setLoading(true);
+      const task = dailyTasks.find(t => t.id === id);
+      if (!task) return;
+      const response = await ApiService.updateDailyTask(id, { content: task.content, date: newDate });
+      const updated = normalizeDailyTask(response);
+      setDailyTasks(prev => prev.map(t => t.id === id ? updated : t));
+      toast({
+        title: "Task Moved",
+        description: `Task moved to ${new Date(newDate).toLocaleDateString()}.`,
+      });
+    } catch (error) {
+      console.error('Failed to move daily task:', error);
+      toast({
+        title: "Error",
+        description: "Failed to move daily task. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [dailyTasks, toast]);
 
-  const deleteDailyTask = useCallback((id: string) => {
-    setDailyTasks(prev => prev.filter(task => task.id !== id));
-    toast({
-      title: "Task Deleted",
-      description: "Your task has been removed.",
-    });
+  const deleteDailyTask = useCallback(async (id: string) => {
+    try {
+      setLoading(true);
+      await ApiService.deleteDailyTask(id);
+      setDailyTasks(prev => prev.filter(task => task.id !== id));
+      toast({
+        title: "Task Deleted",
+        description: "Your task has been removed.",
+      });
+    } catch (error) {
+      console.error('Failed to delete daily task:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete daily task. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   }, [toast]);
 
   const value: NotesContextType = {
