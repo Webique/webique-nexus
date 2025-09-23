@@ -1,21 +1,23 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { ImportantNote, GeneralNote, DailyTask } from '@/types/notes';
 import { useToast } from '@/hooks/use-toast';
+import ApiService from '@/services/api';
 
 interface NotesContextType {
   importantNotes: ImportantNote[];
   generalNotes: GeneralNote[];
   dailyTasks: DailyTask[];
-  addImportantNote: (content: string) => void;
-  updateImportantNote: (id: string, content: string) => void;
-  deleteImportantNote: (id: string) => void;
-  addGeneralNote: (content: string) => void;
-  updateGeneralNote: (id: string, content: string) => void;
-  deleteGeneralNote: (id: string) => void;
-  addDailyTask: (content: string, date: string) => void;
-  updateDailyTask: (id: string, content: string) => void;
-  moveDailyTask: (id: string, newDate: string) => void;
-  deleteDailyTask: (id: string) => void;
+  loading: boolean;
+  addImportantNote: (content: string) => Promise<void>;
+  updateImportantNote: (id: string, content: string) => Promise<void>;
+  deleteImportantNote: (id: string) => Promise<void>;
+  addGeneralNote: (content: string) => Promise<void>;
+  updateGeneralNote: (id: string, content: string) => Promise<void>;
+  deleteGeneralNote: (id: string) => Promise<void>;
+  addDailyTask: (content: string, date: string) => Promise<void>;
+  updateDailyTask: (id: string, content: string) => Promise<void>;
+  moveDailyTask: (id: string, newDate: string) => Promise<void>;
+  deleteDailyTask: (id: string) => Promise<void>;
 }
 
 const NotesContext = createContext<NotesContextType | undefined>(undefined);
@@ -32,59 +34,132 @@ export const NotesProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [importantNotes, setImportantNotes] = useState<ImportantNote[]>([]);
   const [generalNotes, setGeneralNotes] = useState<GeneralNote[]>([]);
   const [dailyTasks, setDailyTasks] = useState<DailyTask[]>([]);
+  const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
+  // Load notes from API on component mount
+  useEffect(() => {
+    loadImportantNotes();
+    loadGeneralNotes();
+    loadDailyTasks();
+  }, []);
+
+  const loadImportantNotes = useCallback(async () => {
+    try {
+      const response = await ApiService.getImportantNotes();
+      setImportantNotes(response.data || []);
+    } catch (error) {
+      console.error('Failed to load important notes:', error);
+    }
+  }, []);
+
+  const loadGeneralNotes = useCallback(async () => {
+    try {
+      const response = await ApiService.getGeneralNotes();
+      setGeneralNotes(response.data || []);
+    } catch (error) {
+      console.error('Failed to load general notes:', error);
+    }
+  }, []);
+
+  const loadDailyTasks = useCallback(async () => {
+    try {
+      const response = await ApiService.getDailyTasks();
+      setDailyTasks(response.data || []);
+    } catch (error) {
+      console.error('Failed to load daily tasks:', error);
+    }
+  }, []);
+
   // Important Notes Management
-  const addImportantNote = useCallback((content: string) => {
-    const newNote: ImportantNote = {
-      id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
-      content,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    setImportantNotes(prev => [...prev, newNote]);
-    toast({
-      title: "Important Note Added",
-      description: "Your important note has been saved.",
-    });
+  const addImportantNote = useCallback(async (content: string) => {
+    try {
+      setLoading(true);
+      const response = await ApiService.createImportantNote({ content });
+      setImportantNotes(prev => [...prev, response]);
+      toast({
+        title: "Important Note Added",
+        description: "Your important note has been saved.",
+      });
+    } catch (error) {
+      console.error('Failed to add important note:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add important note. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   }, [toast]);
 
-  const updateImportantNote = useCallback((id: string, content: string) => {
-    setImportantNotes(prev => prev.map(note => 
-      note.id === id 
-        ? { ...note, content, updatedAt: new Date().toISOString() }
-        : note
-    ));
-    toast({
-      title: "Important Note Updated",
-      description: "Your note has been updated successfully.",
-    });
+  const updateImportantNote = useCallback(async (id: string, content: string) => {
+    try {
+      setLoading(true);
+      const response = await ApiService.updateImportantNote(id, { content });
+      setImportantNotes(prev => prev.map(note => 
+        note.id === id ? response : note
+      ));
+      toast({
+        title: "Important Note Updated",
+        description: "Your note has been updated successfully.",
+      });
+    } catch (error) {
+      console.error('Failed to update important note:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update important note. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   }, [toast]);
 
-  const deleteImportantNote = useCallback((id: string) => {
-    setImportantNotes(prev => prev.filter(note => note.id !== id));
-    toast({
-      title: "Important Note Deleted",
-      description: "Your important note has been removed.",
-    });
+  const deleteImportantNote = useCallback(async (id: string) => {
+    try {
+      setLoading(true);
+      await ApiService.deleteImportantNote(id);
+      setImportantNotes(prev => prev.filter(note => note.id !== id));
+      toast({
+        title: "Important Note Deleted",
+        description: "Your important note has been removed.",
+      });
+    } catch (error) {
+      console.error('Failed to delete important note:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete important note. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   }, [toast]);
 
   // General Notes Management
-  const addGeneralNote = useCallback((content: string) => {
-    const newNote: GeneralNote = {
-      id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
-      content,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    setGeneralNotes(prev => [...prev, newNote]);
-    toast({
-      title: "General Note Added",
-      description: "Your general note has been saved.",
-    });
+  const addGeneralNote = useCallback(async (content: string) => {
+    try {
+      setLoading(true);
+      const response = await ApiService.createGeneralNote({ content });
+      setGeneralNotes(prev => [...prev, response]);
+      toast({
+        title: "General Note Added",
+        description: "Your general note has been saved.",
+      });
+    } catch (error) {
+      console.error('Failed to add general note:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add general note. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   }, [toast]);
 
-  const updateGeneralNote = useCallback((id: string, content: string) => {
+  const updateGeneralNote = useCallback(async (id: string, content: string) => {
     setGeneralNotes(prev => prev.map(note => 
       note.id === id 
         ? { ...note, content, updatedAt: new Date().toISOString() }
@@ -156,6 +231,7 @@ export const NotesProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     importantNotes,
     generalNotes,
     dailyTasks,
+    loading,
     addImportantNote,
     updateImportantNote,
     deleteImportantNote,

@@ -1,21 +1,23 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { Project, FinanceOverview, ProjectFinance, Subscription, TikTokAd } from '@/types/project';
 import { useToast } from '@/hooks/use-toast';
+import ApiService from '@/services/api';
 
 interface ProjectContextType {
   projects: Project[];
   subscriptions: Subscription[];
   tiktokAds: TikTokAd[];
-  addProject: (project: Omit<Project, 'id' | 'createdAt'>) => void;
-  updateProject: (id: string, updates: Partial<Project>) => void;
-  deleteProject: (id: string) => void;
-  completeProject: (id: string) => void;
-  addSubscription: (subscription: Omit<Subscription, 'id' | 'createdAt'>) => void;
-  updateSubscription: (id: string, updates: Partial<Subscription>) => void;
-  deleteSubscription: (id: string) => void;
-  addTikTokAd: (tiktokAd: Omit<TikTokAd, 'id' | 'createdAt'>) => void;
-  updateTikTokAd: (id: string, updates: Partial<TikTokAd>) => void;
-  deleteTikTokAd: (id: string) => void;
+  loading: boolean;
+  addProject: (project: Omit<Project, 'id' | 'createdAt'>) => Promise<void>;
+  updateProject: (id: string, updates: Partial<Project>) => Promise<void>;
+  deleteProject: (id: string) => Promise<void>;
+  completeProject: (id: string) => Promise<void>;
+  addSubscription: (subscription: Omit<Subscription, 'id' | 'createdAt'>) => Promise<void>;
+  updateSubscription: (id: string, updates: Partial<Subscription>) => Promise<void>;
+  deleteSubscription: (id: string) => Promise<void>;
+  addTikTokAd: (tiktokAd: Omit<TikTokAd, 'id' | 'createdAt'>) => Promise<void>;
+  updateTikTokAd: (id: string, updates: Partial<TikTokAd>) => Promise<void>;
+  deleteTikTokAd: (id: string) => Promise<void>;
   getActiveProjects: () => Project[];
   getCompletedProjects: () => Project[];
   getFinanceOverview: () => FinanceOverview;
@@ -36,58 +38,143 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [projects, setProjects] = useState<Project[]>([]);
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [tiktokAds, setTiktokAds] = useState<TikTokAd[]>([]);
+  const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
-  const addProject = useCallback((projectData: Omit<Project, 'id' | 'createdAt'>) => {
-    const newProject: Project = {
-      ...projectData,
-      id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
-      createdAt: new Date().toISOString(),
-    };
-    
-    setProjects(prev => [...prev, newProject]);
-    toast({
-      title: "Project Added",
-      description: `${newProject.name} has been added successfully.`,
-    });
+  // Load projects from API on component mount
+  useEffect(() => {
+    loadProjects();
+    loadSubscriptions();
+    loadTikTokAds();
+  }, []);
+
+  const loadProjects = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await ApiService.getProjects();
+      setProjects(response.data || []);
+    } catch (error) {
+      console.error('Failed to load projects:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load projects. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   }, [toast]);
 
-  const updateProject = useCallback((id: string, updates: Partial<Project>) => {
-    setProjects(prev => prev.map(project => 
-      project.id === id ? { ...project, ...updates } : project
-    ));
-    toast({
-      title: "Project Updated",
-      description: "Project has been updated successfully.",
-    });
+  const loadSubscriptions = useCallback(async () => {
+    try {
+      const response = await ApiService.getSubscriptions();
+      setSubscriptions(response.data || []);
+    } catch (error) {
+      console.error('Failed to load subscriptions:', error);
+    }
+  }, []);
+
+  const loadTikTokAds = useCallback(async () => {
+    try {
+      const response = await ApiService.getTikTokAds();
+      setTiktokAds(response.data || []);
+    } catch (error) {
+      console.error('Failed to load TikTok ads:', error);
+    }
+  }, []);
+
+  const addProject = useCallback(async (projectData: Omit<Project, 'id' | 'createdAt'>) => {
+    try {
+      setLoading(true);
+      const response = await ApiService.createProject(projectData);
+      setProjects(prev => [...prev, response]);
+      toast({
+        title: "Project Added",
+        description: `${response.name} has been added successfully.`,
+      });
+    } catch (error) {
+      console.error('Failed to add project:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add project. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   }, [toast]);
 
-  const deleteProject = useCallback((id: string) => {
-    const project = projects.find(p => p.id === id);
-    setProjects(prev => prev.filter(project => project.id !== id));
-    toast({
-      title: "Project Deleted",
-      description: `${project?.name || 'Project'} has been deleted.`,
-      variant: "destructive",
-    });
-  }, [projects, toast]);
+  const updateProject = useCallback(async (id: string, updates: Partial<Project>) => {
+    try {
+      setLoading(true);
+      const response = await ApiService.updateProject(id, updates);
+      setProjects(prev => prev.map(project => 
+        project.id === id ? response : project
+      ));
+      toast({
+        title: "Project Updated",
+        description: "Project has been updated successfully.",
+      });
+    } catch (error) {
+      console.error('Failed to update project:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update project. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [toast]);
 
-  const completeProject = useCallback((id: string) => {
-    const project = projects.find(p => p.id === id);
-    setProjects(prev => prev.map(project => 
-      project.id === id 
-        ? { 
-            ...project, 
-            status: 'completed' as const, 
-            finishedDate: project.finishedDate || new Date().toISOString() 
-          }
-        : project
-    ));
-    toast({
-      title: "Project Completed",
-      description: `${project?.name || 'Project'} has been moved to completed projects.`,
-    });
-  }, [projects, toast]);
+  const deleteProject = useCallback(async (id: string) => {
+    try {
+      setLoading(true);
+      await ApiService.deleteProject(id);
+      setProjects(prev => prev.filter(project => project.id !== id));
+      toast({
+        title: "Project Deleted",
+        description: "Project has been deleted successfully.",
+        variant: "destructive",
+      });
+    } catch (error) {
+      console.error('Failed to delete project:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete project. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [toast]);
+
+  const completeProject = useCallback(async (id: string) => {
+    try {
+      setLoading(true);
+      const updates = { 
+        status: 'completed' as const, 
+        finishedDate: new Date().toISOString() 
+      };
+      const response = await ApiService.updateProject(id, updates);
+      setProjects(prev => prev.map(project => 
+        project.id === id ? response : project
+      ));
+      toast({
+        title: "Project Completed",
+        description: "Project has been moved to completed projects.",
+      });
+    } catch (error) {
+      console.error('Failed to complete project:', error);
+      toast({
+        title: "Error",
+        description: "Failed to complete project. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [toast]);
 
   // Subscription management
   const addSubscription = useCallback((subscriptionData: Omit<Subscription, 'id' | 'createdAt'>) => {
@@ -197,6 +284,7 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
     projects,
     subscriptions,
     tiktokAds,
+    loading,
     addProject,
     updateProject,
     deleteProject,
