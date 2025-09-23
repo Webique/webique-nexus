@@ -62,6 +62,22 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
     createdAt: doc.createdAt || new Date().toISOString(),
   });
 
+  const normalizeSubscription = (doc: any): Subscription => ({
+    id: doc.id || doc._id,
+    name: doc.name,
+    price: Number(doc.price ?? 0),
+    date: doc.date ? new Date(doc.date).toISOString() : new Date().toISOString(),
+    createdAt: doc.createdAt || new Date().toISOString(),
+  });
+
+  const normalizeTikTokAd = (doc: any): TikTokAd => ({
+    id: doc.id || doc._id,
+    name: doc.name,
+    price: Number(doc.price ?? 0),
+    date: doc.date ? new Date(doc.date).toISOString() : new Date().toISOString(),
+    createdAt: doc.createdAt || new Date().toISOString(),
+  });
+
   // Load projects from API on component mount
   useEffect(() => {
     loadProjects();
@@ -95,11 +111,11 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const loadSubscriptions = useCallback(async () => {
     try {
-      const response = await ApiService.getSubscriptions();
+      const response = await ApiService.getSubscriptions({ page: 1, limit: 1000 });
       const items = Array.isArray(response)
         ? response
         : Array.isArray((response as any)?.data) ? (response as any).data : [];
-      setSubscriptions(items as Subscription[]);
+      setSubscriptions(items.map(normalizeSubscription));
     } catch (error) {
       console.error('Failed to load subscriptions:', error);
     }
@@ -107,11 +123,11 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const loadTikTokAds = useCallback(async () => {
     try {
-      const response = await ApiService.getTikTokAds();
+      const response = await ApiService.getTikTokAds({ page: 1, limit: 1000 });
       const items = Array.isArray(response)
         ? response
         : Array.isArray((response as any)?.data) ? (response as any).data : [];
-      setTiktokAds(items as TikTokAd[]);
+      setTiktokAds(items.map(normalizeTikTokAd));
     } catch (error) {
       console.error('Failed to load TikTok ads:', error);
     }
@@ -210,70 +226,156 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }, [toast]);
 
   // Subscription management
-  const addSubscription = useCallback((subscriptionData: Omit<Subscription, 'id' | 'createdAt'>) => {
-    const newSubscription: Subscription = {
-      ...subscriptionData,
-      id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
-      createdAt: new Date().toISOString(),
-    };
-    setSubscriptions(prev => [...prev, newSubscription]);
-    toast({
-      title: "Subscription Added",
-      description: `${subscriptionData.name} has been added to your subscriptions.`,
-    });
+  const addSubscription = useCallback(async (subscriptionData: Omit<Subscription, 'id' | 'createdAt'>) => {
+    try {
+      setLoading(true);
+      const payload = {
+        name: subscriptionData.name,
+        price: subscriptionData.price,
+        date: subscriptionData.date,
+      };
+      const response = await ApiService.createSubscription(payload);
+      const created = normalizeSubscription(response);
+      setSubscriptions(prev => [...prev, created]);
+      toast({
+        title: "Subscription Added",
+        description: `${created.name} has been added to your subscriptions.`,
+      });
+    } catch (error) {
+      console.error('Failed to add subscription:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add subscription. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   }, [toast]);
 
-  const updateSubscription = useCallback((id: string, updates: Partial<Subscription>) => {
-    setSubscriptions(prev => prev.map(subscription => 
-      subscription.id === id ? { ...subscription, ...updates } : subscription
-    ));
-    toast({
-      title: "Subscription Updated",
-      description: "Subscription has been updated successfully.",
-    });
+  const updateSubscription = useCallback(async (id: string, updates: Partial<Subscription>) => {
+    try {
+      setLoading(true);
+      const payload: any = {};
+      if (updates.name !== undefined) payload.name = updates.name;
+      if (updates.price !== undefined) payload.price = updates.price;
+      if (updates.date !== undefined) payload.date = updates.date;
+      const response = await ApiService.updateSubscription(id, payload);
+      const updated = normalizeSubscription(response);
+      setSubscriptions(prev => prev.map(subscription => 
+        subscription.id === id ? updated : subscription
+      ));
+      toast({
+        title: "Subscription Updated",
+        description: "Subscription has been updated successfully.",
+      });
+    } catch (error) {
+      console.error('Failed to update subscription:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update subscription. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   }, [toast]);
 
-  const deleteSubscription = useCallback((id: string) => {
-    const subscription = subscriptions.find(s => s.id === id);
-    setSubscriptions(prev => prev.filter(subscription => subscription.id !== id));
-    toast({
-      title: "Subscription Deleted",
-      description: `${subscription?.name || 'Subscription'} has been removed.`,
-    });
-  }, [subscriptions, toast]);
+  const deleteSubscription = useCallback(async (id: string) => {
+    try {
+      setLoading(true);
+      await ApiService.deleteSubscription(id);
+      setSubscriptions(prev => prev.filter(subscription => subscription.id !== id));
+      toast({
+        title: "Subscription Deleted",
+        description: `Subscription has been removed.`,
+      });
+    } catch (error) {
+      console.error('Failed to delete subscription:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete subscription. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [toast]);
 
   // TikTok Ad management
-  const addTikTokAd = useCallback((tiktokAdData: Omit<TikTokAd, 'id' | 'createdAt'>) => {
-    const newTikTokAd: TikTokAd = {
-      ...tiktokAdData,
-      id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
-      createdAt: new Date().toISOString(),
-    };
-    setTiktokAds(prev => [...prev, newTikTokAd]);
-    toast({
-      title: "TikTok Ad Added",
-      description: `${tiktokAdData.name} has been added to your campaigns.`,
-    });
+  const addTikTokAd = useCallback(async (tiktokAdData: Omit<TikTokAd, 'id' | 'createdAt'>) => {
+    try {
+      setLoading(true);
+      const payload = {
+        name: tiktokAdData.name,
+        price: tiktokAdData.price,
+        date: tiktokAdData.date,
+      };
+      const response = await ApiService.createTikTokAd(payload);
+      const created = normalizeTikTokAd(response);
+      setTiktokAds(prev => [...prev, created]);
+      toast({
+        title: "TikTok Ad Added",
+        description: `${created.name} has been added to your campaigns.`,
+      });
+    } catch (error) {
+      console.error('Failed to add TikTok ad:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add TikTok ad. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   }, [toast]);
 
-  const updateTikTokAd = useCallback((id: string, updates: Partial<TikTokAd>) => {
-    setTiktokAds(prev => prev.map(ad => 
-      ad.id === id ? { ...ad, ...updates } : ad
-    ));
-    toast({
-      title: "TikTok Ad Updated",
-      description: "Campaign has been updated successfully.",
-    });
+  const updateTikTokAd = useCallback(async (id: string, updates: Partial<TikTokAd>) => {
+    try {
+      setLoading(true);
+      const payload: any = {};
+      if (updates.name !== undefined) payload.name = updates.name;
+      if (updates.price !== undefined) payload.price = updates.price;
+      if (updates.date !== undefined) payload.date = updates.date;
+      const response = await ApiService.updateTikTokAd(id, payload);
+      const updated = normalizeTikTokAd(response);
+      setTiktokAds(prev => prev.map(ad => ad.id === id ? updated : ad));
+      toast({
+        title: "TikTok Ad Updated",
+        description: "Campaign has been updated successfully.",
+      });
+    } catch (error) {
+      console.error('Failed to update TikTok ad:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update TikTok ad. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   }, [toast]);
 
-  const deleteTikTokAd = useCallback((id: string) => {
-    const ad = tiktokAds.find(a => a.id === id);
-    setTiktokAds(prev => prev.filter(ad => ad.id !== id));
-    toast({
-      title: "TikTok Ad Deleted",
-      description: `${ad?.name || 'Campaign'} has been removed.`,
-    });
-  }, [tiktokAds, toast]);
+  const deleteTikTokAd = useCallback(async (id: string) => {
+    try {
+      setLoading(true);
+      await ApiService.deleteTikTokAd(id);
+      setTiktokAds(prev => prev.filter(ad => ad.id !== id));
+      toast({
+        title: "TikTok Ad Deleted",
+        description: `Campaign has been removed.`,
+      });
+    } catch (error) {
+      console.error('Failed to delete TikTok ad:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete TikTok ad. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [toast]);
 
   const getActiveProjects = useCallback(() => {
     return projects.filter(project => project.status === 'active');
