@@ -18,6 +18,9 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// Ensure correct client IPs behind Render/Proxies for rate limiter
+app.set('trust proxy', 1);
+
 // Connect to MongoDB
 connectDB();
 
@@ -47,11 +50,11 @@ app.use(helmet());
 // Rate limiting (skip preflight OPTIONS)
 const limiter = rateLimit({
   windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000'), // 15 minutes
-  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100'),
+  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '1000'),
   message: 'Too many requests from this IP, please try again later.',
   standardHeaders: true,
   legacyHeaders: false,
-  skip: (req) => req.method === 'OPTIONS',
+  skip: (req) => req.method === 'OPTIONS' || req.headers['x-bulk-import'] === 'true',
 });
 app.use(limiter);
 
