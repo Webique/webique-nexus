@@ -110,4 +110,4 @@ ProjectSchema.pre('save', function(next) {
 ProjectSchema.index({ status: 1, createdAt: -1 });
 ProjectSchema.index({ name: 'text', notes: 'text' });
 
-export default mongoose.model<IProject>('Project', ProjectSchema);
+export = mongoose.model<IProject>('Project', ProjectSchema);

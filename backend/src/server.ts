@@ -5,12 +5,12 @@ import compression from 'compression';
 import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
-import { connectDB } from './config/database.js';
-import projectRoutes from './routes/projects.js';
-import notesRoutes from './routes/notes.js';
-import subscriptionRoutes from './routes/subscriptions.js';
-import tiktokAdRoutes from './routes/tiktokAds.js';
-import { errorHandler } from './middleware/errorHandler.js';
+import { connectDB } from './config/database';
+import projectRoutes from './routes/projects';
+import notesRoutes from './routes/notes';
+import subscriptionRoutes from './routes/subscriptions';
+import tiktokAdRoutes from './routes/tiktokAds';
+import { errorHandler } from './middleware/errorHandler';
 
 // Load environment variables
 dotenv.config();
@@ -89,4 +89,4 @@ app.listen(PORT, () => {
   console.log(`🌐 CORS enabled for: ${process.env.FRONTEND_URL || 'http://localhost:5173'}`);
 });
 
-export default app;
+export = app;

@@ -1,5 +1,5 @@
 import express from 'express';
-import Project from '../models/Project.js';
+import Project from '../models/Project';
 
 const router = express.Router();
 
@@ -157,4 +157,4 @@ router.get('/stats/overview', async (req, res, next) => {
   }
 });
 
-export default router;
+export = router;

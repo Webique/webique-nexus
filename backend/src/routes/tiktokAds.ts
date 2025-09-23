@@ -1,5 +1,5 @@
 import express from 'express';
-import TikTokAd from '../models/TikTokAd.js';
+import TikTokAd from '../models/TikTokAd';
 
 const router = express.Router();
 
@@ -161,4 +161,4 @@ router.get('/stats/total', async (req, res, next) => {
   }
 });
 
-export default router;
+export = router;

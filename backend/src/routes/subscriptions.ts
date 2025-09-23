@@ -1,5 +1,5 @@
 import express from 'express';
-import Subscription from '../models/Subscription.js';
+import Subscription from '../models/Subscription';
 
 const router = express.Router();
 
@@ -161,4 +161,4 @@ router.get('/stats/total', async (req, res, next) => {
   }
 });
 
-export default router;
+export = router;

@@ -32,4 +32,4 @@ const SubscriptionSchema = new Schema<ISubscription>({
 SubscriptionSchema.index({ date: -1, createdAt: -1 });
 SubscriptionSchema.index({ name: 'text' });
 
-export default mongoose.model<ISubscription>('Subscription', SubscriptionSchema);
+export = mongoose.model<ISubscription>('Subscription', SubscriptionSchema);

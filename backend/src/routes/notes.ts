@@ -1,5 +1,5 @@
 import express from 'express';
-import { ImportantNote, DailyTask, GeneralNote } from '../models/Note.js';
+import { ImportantNote, DailyTask, GeneralNote } from '../models/Note';
 
 const router = express.Router();
 
@@ -187,4 +187,4 @@ router.delete('/general/:id', async (req, res, next) => {
   }
 });
 
-export default router;
+export = router;
