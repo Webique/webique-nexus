@@ -89,6 +89,12 @@ export function AddProjectDialog({ open, onOpenChange }: AddProjectDialogProps) 
       const amountReceived = data.amountReceived || 0;
       const remainingAmount = totalAmount - amountReceived;
 
+      // Apply sensible defaults for costs when it's a Freelancer project
+      const isFreelancer = data.label === 'Freelancer';
+      const domainCost = data.domainCost ?? (isFreelancer ? 100 : data.domainCost);
+      const freelancerManagerFees = data.freelancerManagerFees ?? (isFreelancer ? 50 : data.freelancerManagerFees);
+      const freelancerFees = data.freelancerFees ?? (isFreelancer ? 310 : data.freelancerFees);
+
       const projectData = {
         name: data.name,
         phoneNumber: data.phoneNumber,
@@ -99,11 +105,11 @@ export function AddProjectDialog({ open, onOpenChange }: AddProjectDialogProps) 
         amountReceived: amountReceived,
         remainingAmount: remainingAmount,
         finishedDate: data.finishedDate || "",
-        domainCost: data.domainCost,
+        domainCost: domainCost,
         additionalCosts: data.additionalCosts,
         additionalCostReason: data.additionalCostReason || "",
-        freelancerManagerFees: data.freelancerManagerFees,
-        freelancerFees: data.freelancerFees,
+        freelancerManagerFees: freelancerManagerFees,
+        freelancerFees: freelancerFees,
         label: data.label,
         status: 'active' as const,
       };
