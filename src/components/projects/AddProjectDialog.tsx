@@ -95,6 +95,9 @@ export function AddProjectDialog({ open, onOpenChange }: AddProjectDialogProps) 
       const freelancerManagerFees = data.freelancerManagerFees ?? (isFreelancer ? 50 : data.freelancerManagerFees);
       const freelancerFees = data.freelancerFees ?? (isFreelancer ? 310 : data.freelancerFees);
 
+      // Merge manager+freelancer fees into additional costs for freelancer projects
+      const mergedAdditionalCosts = (data.additionalCosts || 0) + (isFreelancer ? ((freelancerManagerFees || 0) + (freelancerFees || 0)) : 0);
+
       const projectData = {
         name: data.name,
         phoneNumber: data.phoneNumber,
@@ -106,7 +109,7 @@ export function AddProjectDialog({ open, onOpenChange }: AddProjectDialogProps) 
         remainingAmount: remainingAmount,
         finishedDate: data.finishedDate || "",
         domainCost: domainCost,
-        additionalCosts: data.additionalCosts,
+        additionalCosts: mergedAdditionalCosts,
         additionalCostReason: data.additionalCostReason || "",
         freelancerManagerFees: freelancerManagerFees,
         freelancerFees: freelancerFees,
