@@ -416,7 +416,15 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const totalRevenue = projects.reduce((sum, project) => sum + (project.amountReceived || 0), 0);
     const totalAmountReceived = projects.reduce((sum, project) => sum + (project.amountReceived || 0), 0);
     const totalRemainingAmount = projects.reduce((sum, project) => sum + (project.remainingAmount || 0), 0);
-    const projectCosts = projects.reduce((sum, project) => sum + (project.domainCost || 0) + (project.additionalCosts || 0), 0);
+    
+    // Include freelancer fees as expenses for Freelancer projects
+    const projectCosts = projects.reduce((sum, project) => {
+      const freelancerCosts = project.label === 'Freelancer' 
+        ? (project.freelancerFees || 0) + (project.freelancerManagerFees || 0)
+        : 0;
+      return sum + (project.domainCost || 0) + (project.additionalCosts || 0) + freelancerCosts;
+    }, 0);
+    
     const totalSubscriptionCosts = subscriptions.reduce((sum, subscription) => sum + subscription.price, 0);
     const totalTikTokAdCosts = tiktokAds.reduce((sum, ad) => sum + ad.price, 0);
     const totalCosts = projectCosts + totalSubscriptionCosts + totalTikTokAdCosts;
