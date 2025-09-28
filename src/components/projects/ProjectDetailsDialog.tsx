@@ -36,7 +36,11 @@ export function ProjectDetailsDialog({ project, open, onOpenChange }: ProjectDet
     return label === 'In-House' ? 'default' : 'secondary';
   };
 
-  const totalCosts = (project.domainCost || 0) + (project.additionalCosts || 0);
+  // Include freelancer fees as expenses for Freelancer projects
+  const freelancerCosts = project.label === 'Freelancer' 
+    ? (project.freelancerFees || 0) + (project.freelancerManagerFees || 0)
+    : 0;
+  const totalCosts = (project.domainCost || 0) + (project.additionalCosts || 0) + freelancerCosts;
   const profit = (project.totalAmount || 0) - totalCosts;
   const profitMargin = (project.totalAmount || 0) > 0 ? (profit / (project.totalAmount || 1)) * 100 : 0;
 

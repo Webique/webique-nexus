@@ -434,12 +434,20 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }, [projects, subscriptions, tiktokAds]);
 
   const getProjectFinances = useCallback((): ProjectFinance[] => {
-    return projects.map(project => ({
-      ...project,
-      revenue: project.amountReceived || 0,
-      totalProjectCosts: (project.domainCost || 0) + (project.additionalCosts || 0),
-      profit: (project.amountReceived || 0) - ((project.domainCost || 0) + (project.additionalCosts || 0)),
-    }));
+    return projects.map(project => {
+      // Include freelancer fees as expenses for Freelancer projects
+      const freelancerCosts = project.label === 'Freelancer' 
+        ? (project.freelancerFees || 0) + (project.freelancerManagerFees || 0)
+        : 0;
+      const totalProjectCosts = (project.domainCost || 0) + (project.additionalCosts || 0) + freelancerCosts;
+      
+      return {
+        ...project,
+        revenue: project.amountReceived || 0,
+        totalProjectCosts,
+        profit: (project.amountReceived || 0) - totalProjectCosts,
+      };
+    });
   }, [projects]);
 
   const value: ProjectContextType = {
