@@ -6,7 +6,8 @@ import {
   CheckSquare, 
   Layers, 
   Menu,
-  StickyNote
+  StickyNote,
+  Users
 } from "lucide-react";
 import {
   Sidebar,
@@ -22,7 +23,13 @@ import {
 } from "@/components/ui/sidebar";
 import { useFreelancerManagerAuth } from "@/contexts/FreelancerManagerAuthContext";
 
-const navigationItems = [
+const navigationItems: Array<{
+  title: string;
+  url: string;
+  icon: React.ComponentType<{ className?: string }>;
+  description: string;
+  external?: boolean;
+}> = [
   { 
     title: "Active Projects", 
     url: "/", 
@@ -52,6 +59,13 @@ const navigationItems = [
     url: "/calculator", 
     icon: Calculator,
     description: "Project cost calculator"
+  },
+  { 
+    title: "Freelancer Manager", 
+    url: "/freelancer-manager/login", 
+    icon: Users,
+    description: "Access freelancer portal",
+    external: true
   },
 ];
 
@@ -128,21 +142,36 @@ export function AppSidebar() {
                 {navigationItems.map((item) => (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild className="p-0">
-                      <NavLink 
-                        to={item.url} 
-                        className={getNavClass(item.url)}
-                        title={collapsed ? item.title : undefined}
-                      >
-                        <item.icon className={`w-5 h-5 flex-shrink-0 transition-transform duration-300 ${isActive(item.url) ? 'scale-110' : 'group-hover:scale-105'}`} />
-                        {!collapsed && (
-                          <div className="flex-1 min-w-0">
-                            <span className="font-semibold text-sm">{item.title}</span>
-                          </div>
-                        )}
-                        {isActive(item.url) && (
-                          <div className="absolute right-2 w-2 h-2 bg-primary-foreground rounded-full opacity-80"></div>
-                        )}
-                      </NavLink>
+                      {item.external ? (
+                        <NavLink
+                          to={item.url}
+                          className={getNavClass(item.url)}
+                          title={collapsed ? item.title : undefined}
+                        >
+                          <item.icon className={`w-5 h-5 flex-shrink-0 transition-transform duration-300 group-hover:scale-105`} />
+                          {!collapsed && (
+                            <div className="flex-1 min-w-0">
+                              <span className="font-semibold text-sm">{item.title}</span>
+                            </div>
+                          )}
+                        </NavLink>
+                      ) : (
+                        <NavLink 
+                          to={item.url} 
+                          className={getNavClass(item.url)}
+                          title={collapsed ? item.title : undefined}
+                        >
+                          <item.icon className={`w-5 h-5 flex-shrink-0 transition-transform duration-300 ${isActive(item.url) ? 'scale-110' : 'group-hover:scale-105'}`} />
+                          {!collapsed && (
+                            <div className="flex-1 min-w-0">
+                              <span className="font-semibold text-sm">{item.title}</span>
+                            </div>
+                          )}
+                          {isActive(item.url) && (
+                            <div className="absolute right-2 w-2 h-2 bg-primary-foreground rounded-full opacity-80"></div>
+                          )}
+                        </NavLink>
+                      )}
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 ))}
