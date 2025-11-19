@@ -91,15 +91,7 @@ export function AddProjectDialog({ open, onOpenChange }: AddProjectDialogProps) 
       const amountReceived = data.amountReceived || 0;
       const remainingAmount = totalAmount - amountReceived;
 
-      // Apply sensible defaults for costs when it's a Freelancer project
-      const isFreelancer = data.label === 'Freelancer';
-      const domainCost = data.domainCost ?? (isFreelancer ? 100 : data.domainCost);
-      const freelancerManagerFees = data.freelancerManagerFees ?? (isFreelancer ? 50 : data.freelancerManagerFees);
-      const freelancerFees = data.freelancerFees ?? (isFreelancer ? 310 : data.freelancerFees);
-
-      // Merge manager+freelancer fees into additional costs for freelancer projects
-      const mergedAdditionalCosts = (data.additionalCosts || 0) + (isFreelancer ? ((freelancerManagerFees || 0) + (freelancerFees || 0)) : 0);
-
+      // Set all fees to 0 or undefined - will be added manually
       const projectData = {
         name: data.name,
         phoneNumber: data.phoneNumber,
@@ -110,11 +102,11 @@ export function AddProjectDialog({ open, onOpenChange }: AddProjectDialogProps) 
         amountReceived: amountReceived,
         remainingAmount: remainingAmount,
         finishedDate: data.finishedDate || "",
-        domainCost: domainCost,
-        additionalCosts: mergedAdditionalCosts,
+        domainCost: data.domainCost ?? 0,
+        additionalCosts: data.additionalCosts ?? 0,
         additionalCostReason: data.additionalCostReason || "",
-        freelancerManagerFees: freelancerManagerFees,
-        freelancerFees: freelancerFees,
+        freelancerManagerFees: data.freelancerManagerFees ?? 0,
+        freelancerFees: data.freelancerFees ?? 0,
         freelancer: data.freelancer,
         label: data.label,
         status: 'active' as const,

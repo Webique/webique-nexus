@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -18,82 +18,116 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { useProjects } from "@/contexts/ProjectContext";
+import { Project } from "@/types/project";
 import { useToast } from "@/hooks/use-toast";
 
-const freelancerProjectSchema = z.object({
+const editFreelancerProjectSchema = z.object({
   name: z.string().min(1, "Project name is required"),
   phoneNumber: z.string().min(1, "Phone number is required"),
-  notes: z.string().optional(),
   instagram: z.string().optional(),
   websiteLink: z.string().optional(),
   totalAmount: z.number().min(0, "Total amount must be positive").optional(),
   freelancer: z.string().optional(),
 });
 
-type FreelancerProjectFormData = z.infer<typeof freelancerProjectSchema>;
+type EditFreelancerProjectFormData = z.infer<typeof editFreelancerProjectSchema>;
 
-interface AddFreelancerProjectDialogProps {
+interface EditFreelancerProjectDialogProps {
+  project: Project;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-export function AddFreelancerProjectDialog({ open, onOpenChange }: AddFreelancerProjectDialogProps) {
-  const { addProject } = useProjects();
+export function EditFreelancerProjectDialog({ project, open, onOpenChange }: EditFreelancerProjectDialogProps) {
+  const { updateProject } = useProjects();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const form = useForm<FreelancerProjectFormData>({
-    resolver: zodResolver(freelancerProjectSchema),
+  const form = useForm<EditFreelancerProjectFormData>({
+    resolver: zodResolver(editFreelancerProjectSchema),
     defaultValues: {
-      name: "",
-      phoneNumber: "",
-      notes: "",
-      instagram: "",
-      websiteLink: "",
-      totalAmount: undefined,
-      freelancer: undefined,
+      name: project.name || "",
+      phoneNumber: project.phoneNumber || "",
+      instagram: project.instagram || "",
+      websiteLink: project.websiteLink || "",
+      totalAmount: project.totalAmount,
+      freelancer: project.freelancer || "",
     },
   });
 
-  const onSubmit = async (data: FreelancerProjectFormData) => {
+  useEffect(() => {
+    if (open) {
+      // Security check: Only allow editing active Freelancer projects
+      if (project.label !== 'Freelancer') {
+        toast({
+          title: "Access Denied",
+          description: "You can only edit Freelancer projects.",
+          variant: "destructive",
+        });
+        onOpenChange(false);
+        return;
+      }
+
+      if (project.status !== 'active') {
+        toast({
+          title: "Access Denied",
+          description: "You can only edit active projects.",
+          variant: "destructive",
+        });
+        onOpenChange(false);
+        return;
+      }
+
+      form.reset({
+        name: project.name || "",
+        phoneNumber: project.phoneNumber || "",
+        instagram: project.instagram || "",
+        websiteLink: project.websiteLink || "",
+        totalAmount: project.totalAmount,
+        freelancer: project.freelancer || "",
+      });
+    }
+  }, [open, project, form, onOpenChange, toast]);
+
+  const onSubmit = async (data: EditFreelancerProjectFormData) => {
+    // Security check: Ensure this is an active Freelancer project
+    if (project.label !== 'Freelancer' || project.status !== 'active') {
+      toast({
+        title: "Access Denied",
+        description: "You can only edit active Freelancer projects.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const totalAmount = data.totalAmount || 0;
-      
-      // Set all fees to 0 - will be added manually by admin
-      const projectData = {
+      const currentAmountReceived = project.amountReceived || 0;
+      const remainingAmount = totalAmount - currentAmountReceived;
+
+      // Only update allowed fields - cannot change amountReceived, fees, or status
+      await updateProject(project.id, {
         name: data.name,
         phoneNumber: data.phoneNumber,
-        notes: data.notes || "",
         instagram: data.instagram || "",
         websiteLink: data.websiteLink || "",
         totalAmount: totalAmount,
-        amountReceived: 0, // Freelancer Manager cannot set this
-        remainingAmount: totalAmount,
-        domainCost: 0,
-        additionalCosts: 0,
-        additionalCostReason: "",
-        freelancerManagerFees: 0,
-        freelancerFees: 0,
-        freelancer: data.freelancer,
-        label: 'Freelancer' as const,
-        status: 'active' as const,
-      };
-      
-      await addProject(projectData);
-      toast({
-        title: "Project Added",
-        description: "Project has been added successfully.",
+        remainingAmount: remainingAmount,
+        freelancer: data.freelancer || "",
       });
-      form.reset();
+
+      toast({
+        title: "Project Updated",
+        description: "Project has been updated successfully.",
+      });
       onOpenChange(false);
     } catch (error) {
-      console.error('Error adding project:', error);
+      console.error('Error updating project:', error);
       toast({
         title: "Error",
-        description: "Failed to add project. Please try again.",
+        description: "Failed to update project. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -103,9 +137,9 @@ export function AddFreelancerProjectDialog({ open, onOpenChange }: AddFreelancer
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] bg-card border-border max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[500px] bg-card border-border max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-foreground">Add New Freelancer Project</DialogTitle>
+          <DialogTitle className="text-foreground">Edit Project - {project.name}</DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -205,24 +239,6 @@ export function AddFreelancerProjectDialog({ open, onOpenChange }: AddFreelancer
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="notes"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Notes (Optional)</FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      {...field} 
-                      className="bg-input min-h-[100px]" 
-                      placeholder="Enter project notes"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
             <div className="flex justify-end gap-3 pt-4">
               <Button 
                 type="button" 
@@ -237,7 +253,7 @@ export function AddFreelancerProjectDialog({ open, onOpenChange }: AddFreelancer
                 className="bg-gradient-primary"
                 disabled={isSubmitting}
               >
-                {isSubmitting ? "Adding..." : "Add Project"}
+                {isSubmitting ? "Saving..." : "Save Changes"}
               </Button>
             </div>
           </form>

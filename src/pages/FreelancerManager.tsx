@@ -16,6 +16,7 @@ import {
 import { ProjectDetailsDialog } from "@/components/projects/ProjectDetailsDialog";
 import { AddFreelancerProjectDialog } from "@/components/freelancer-manager/AddFreelancerProjectDialog";
 import { EditNotesDialog } from "@/components/freelancer-manager/EditNotesDialog";
+import { EditFreelancerProjectDialog } from "@/components/freelancer-manager/EditFreelancerProjectDialog";
 import { Project } from "@/types/project";
 
 const FreelancerManager = () => {
@@ -30,6 +31,7 @@ const FreelancerManager = () => {
   const { projects } = useProjects();
   const [viewingProject, setViewingProject] = useState<Project | null>(null);
   const [editingNotes, setEditingNotes] = useState<Project | null>(null);
+  const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [activeSortOrder, setActiveSortOrder] = useState<'desc' | 'asc'>('desc');
   const [completedSortOrder, setCompletedSortOrder] = useState<'desc' | 'asc'>('desc');
@@ -243,6 +245,13 @@ const FreelancerManager = () => {
                             <TableCell>
                               <div className="flex items-center justify-end gap-2">
                                 <button
+                                  onClick={() => setEditingProject(project)}
+                                  className="p-2 hover:bg-muted rounded-md transition-colors"
+                                  title="Edit Project"
+                                >
+                                  <Edit className="w-4 h-4" />
+                                </button>
+                                <button
                                   onClick={() => setEditingNotes(project)}
                                   className="p-2 hover:bg-muted rounded-md transition-colors"
                                   title="Edit Notes"
@@ -387,6 +396,14 @@ const FreelancerManager = () => {
         open={showAddDialog}
         onOpenChange={setShowAddDialog}
       />
+
+      {editingProject && (
+        <EditFreelancerProjectDialog
+          project={editingProject}
+          open={!!editingProject}
+          onOpenChange={(open) => !open && setEditingProject(null)}
+        />
+      )}
 
       {editingNotes && (
         <EditNotesDialog
