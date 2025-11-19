@@ -23,7 +23,8 @@ const FreelancerManager = () => {
   // NOTE: Freelancer Manager has LIMITED access:
   // - Can only view Freelancer projects
   // - Can add new Freelancer projects
-  // - Can edit notes on Freelancer projects ONLY
+  // - Can edit active projects (name, phone, instagram, website, total amount, freelancer, notes)
+  // - Can edit notes on completed Freelancer projects ONLY
   // - CANNOT delete projects
   // - CANNOT edit amountReceived
   // - CANNOT mark projects as completed
@@ -248,13 +249,6 @@ const FreelancerManager = () => {
                                   onClick={() => setEditingProject(project)}
                                   className="p-2 hover:bg-muted rounded-md transition-colors"
                                   title="Edit Project"
-                                >
-                                  <Edit className="w-4 h-4" />
-                                </button>
-                                <button
-                                  onClick={() => setEditingNotes(project)}
-                                  className="p-2 hover:bg-muted rounded-md transition-colors"
-                                  title="Edit Notes"
                                 >
                                   <Edit className="w-4 h-4" />
                                 </button>

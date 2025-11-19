@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { useProjects } from "@/contexts/ProjectContext";
 import { Project } from "@/types/project";
 import { useToast } from "@/hooks/use-toast";
@@ -29,6 +30,7 @@ const editFreelancerProjectSchema = z.object({
   websiteLink: z.string().optional(),
   totalAmount: z.number().min(0, "Total amount must be positive").optional(),
   freelancer: z.string().optional(),
+  notes: z.string().optional(),
 });
 
 type EditFreelancerProjectFormData = z.infer<typeof editFreelancerProjectSchema>;
@@ -53,6 +55,7 @@ export function EditFreelancerProjectDialog({ project, open, onOpenChange }: Edi
       websiteLink: project.websiteLink || "",
       totalAmount: project.totalAmount,
       freelancer: project.freelancer || "",
+      notes: project.notes || "",
     },
   });
 
@@ -86,6 +89,7 @@ export function EditFreelancerProjectDialog({ project, open, onOpenChange }: Edi
         websiteLink: project.websiteLink || "",
         totalAmount: project.totalAmount,
         freelancer: project.freelancer || "",
+        notes: project.notes || "",
       });
     }
   }, [open, project, form, onOpenChange, toast]);
@@ -116,6 +120,7 @@ export function EditFreelancerProjectDialog({ project, open, onOpenChange }: Edi
         totalAmount: totalAmount,
         remainingAmount: remainingAmount,
         freelancer: data.freelancer || "",
+        notes: data.notes || "",
       });
 
       toast({
@@ -232,6 +237,25 @@ export function EditFreelancerProjectDialog({ project, open, onOpenChange }: Edi
                       {...field} 
                       className="bg-input" 
                       placeholder="Enter freelancer name"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="notes"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Notes (Optional)</FormLabel>
+                  <FormControl>
+                    <Textarea 
+                      {...field} 
+                      className="bg-input min-h-[100px]" 
+                      placeholder="Enter project notes"
+                      rows={4}
                     />
                   </FormControl>
                   <FormMessage />
