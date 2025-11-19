@@ -7,7 +7,8 @@ import {
   Layers, 
   Menu,
   StickyNote,
-  Users
+  Users,
+  LogOut
 } from "lucide-react";
 import {
   Sidebar,
@@ -22,6 +23,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { useFreelancerManagerAuth } from "@/contexts/FreelancerManagerAuthContext";
+import { useDashboardAuth } from "@/contexts/DashboardAuthContext";
 
 const navigationItems: Array<{
   title: string;
@@ -74,8 +76,14 @@ export function AppSidebar() {
   const location = useLocation();
   const navigate = useNavigate();
   const { isFreelancerManager } = useFreelancerManagerAuth();
+  const { logout } = useDashboardAuth();
   const currentPath = location.pathname;
   const collapsed = state === "collapsed";
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
 
   // Security check - redirect Freelancer Manager if they somehow access sidebar
   useEffect(() => {
@@ -180,8 +188,24 @@ export function AppSidebar() {
           </SidebarGroup>
         </div>
 
-        {/* Collapse Toggle */}
+        {/* Logout Button */}
         <div className={`mt-6 ${collapsed ? 'mx-auto' : ''}`}>
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center justify-center gap-2 p-3 rounded-xl bg-destructive/10 hover:bg-destructive/20 text-destructive transition-all duration-300 hover:shadow-md group"
+            title={collapsed ? 'Logout' : undefined}
+          >
+            <LogOut className="w-4 h-4 group-hover:scale-110 transition-transform duration-300" />
+            {!collapsed && (
+              <span className="text-sm font-medium">
+                Logout
+              </span>
+            )}
+          </button>
+        </div>
+
+        {/* Collapse Toggle */}
+        <div className={`mt-2 ${collapsed ? 'mx-auto' : ''}`}>
           <SidebarTrigger className="w-full flex items-center justify-center p-3 rounded-xl bg-sidebar-accent hover:bg-sidebar-border transition-all duration-300 hover:shadow-md group">
             <Menu className="w-4 h-4 group-hover:rotate-90 transition-transform duration-300" />
             {!collapsed && (

@@ -1,11 +1,13 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import { useFreelancerManagerAuth } from "@/contexts/FreelancerManagerAuthContext";
+import { useDashboardAuth } from "@/contexts/DashboardAuthContext";
 
 const NotFound = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { isFreelancerManager } = useFreelancerManagerAuth();
+  const { isAuthenticated } = useDashboardAuth();
 
   useEffect(() => {
     console.error("404 Error: User attempted to access non-existent route:", location.pathname);
@@ -13,11 +15,17 @@ const NotFound = () => {
     // If Freelancer Manager, redirect to their portal
     if (isFreelancerManager) {
       navigate("/freelancer-manager", { replace: true });
+      return;
     }
-  }, [location.pathname, isFreelancerManager, navigate]);
 
-  // Don't render if Freelancer Manager (will redirect)
-  if (isFreelancerManager) {
+    // If not authenticated, redirect to login
+    if (!isAuthenticated && !isFreelancerManager) {
+      navigate("/login", { replace: true });
+    }
+  }, [location.pathname, isFreelancerManager, isAuthenticated, navigate]);
+
+  // Don't render if redirecting
+  if (isFreelancerManager || (!isAuthenticated && !isFreelancerManager)) {
     return null;
   }
 

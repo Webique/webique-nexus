@@ -5,10 +5,13 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { FreelancerManagerAuthProvider, useFreelancerManagerAuth } from "@/contexts/FreelancerManagerAuthContext";
+import { DashboardAuthProvider } from "@/contexts/DashboardAuthContext";
 import { DashboardLayout } from "./components/layout/DashboardLayout";
 import { FreelancerManagerLayout } from "./components/freelancer-manager/FreelancerManagerLayout";
-import { ProtectedDashboardRoute } from "./components/freelancer-manager/ProtectedDashboardRoute";
+import { ProtectedDashboardRoute as ProtectedFreelancerDashboardRoute } from "./components/freelancer-manager/ProtectedDashboardRoute";
+import { ProtectedDashboardRoute } from "./components/dashboard/ProtectedDashboardRoute";
 import { ProtectedFreelancerRoute } from "./components/freelancer-manager/ProtectedFreelancerRoute";
+import { DashboardLogin } from "./components/dashboard/DashboardLogin";
 import { FreelancerManagerLogin } from "./components/freelancer-manager/FreelancerManagerLogin";
 import ActiveProjects from "./pages/ActiveProjects";
 import CompletedProjects from "./pages/CompletedProjects";
@@ -45,6 +48,9 @@ function AppRoutes() {
     <>
       <NavigationGuard />
       <Routes>
+            {/* Dashboard Login */}
+            <Route path="/login" element={<DashboardLogin />} />
+
             {/* Freelancer Manager Routes */}
             <Route path="/freelancer-manager/login" element={<FreelancerManagerLogin />} />
             <Route path="/freelancer-manager" element={
@@ -55,40 +61,50 @@ function AppRoutes() {
               </ProtectedFreelancerRoute>
             } />
 
-            {/* Main Dashboard Routes - Protected from Freelancer Manager */}
+            {/* Main Dashboard Routes - Protected with authentication */}
             <Route path="/" element={
               <ProtectedDashboardRoute>
-                <DashboardLayout>
-                  <ActiveProjects />
-                </DashboardLayout>
+                <ProtectedFreelancerDashboardRoute>
+                  <DashboardLayout>
+                    <ActiveProjects />
+                  </DashboardLayout>
+                </ProtectedFreelancerDashboardRoute>
               </ProtectedDashboardRoute>
             } />
             <Route path="/completed" element={
               <ProtectedDashboardRoute>
-                <DashboardLayout>
-                  <CompletedProjects />
-                </DashboardLayout>
+                <ProtectedFreelancerDashboardRoute>
+                  <DashboardLayout>
+                    <CompletedProjects />
+                  </DashboardLayout>
+                </ProtectedFreelancerDashboardRoute>
               </ProtectedDashboardRoute>
             } />
             <Route path="/finance" element={
               <ProtectedDashboardRoute>
-                <DashboardLayout>
-                  <Finance />
-                </DashboardLayout>
+                <ProtectedFreelancerDashboardRoute>
+                  <DashboardLayout>
+                    <Finance />
+                  </DashboardLayout>
+                </ProtectedFreelancerDashboardRoute>
               </ProtectedDashboardRoute>
             } />
             <Route path="/notes" element={
               <ProtectedDashboardRoute>
-                <DashboardLayout>
-                  <Notes />
-                </DashboardLayout>
+                <ProtectedFreelancerDashboardRoute>
+                  <DashboardLayout>
+                    <Notes />
+                  </DashboardLayout>
+                </ProtectedFreelancerDashboardRoute>
               </ProtectedDashboardRoute>
             } />
             <Route path="/calculator" element={
               <ProtectedDashboardRoute>
-                <DashboardLayout>
-                  <Calculator />
-                </DashboardLayout>
+                <ProtectedFreelancerDashboardRoute>
+                  <DashboardLayout>
+                    <Calculator />
+                  </DashboardLayout>
+                </ProtectedFreelancerDashboardRoute>
               </ProtectedDashboardRoute>
             } />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
@@ -100,15 +116,17 @@ function AppRoutes() {
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <FreelancerManagerAuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <AppRoutes />
-        </BrowserRouter>
-      </TooltipProvider>
-    </FreelancerManagerAuthProvider>
+    <DashboardAuthProvider>
+      <FreelancerManagerAuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <AppRoutes />
+          </BrowserRouter>
+        </TooltipProvider>
+      </FreelancerManagerAuthProvider>
+    </DashboardAuthProvider>
   </QueryClientProvider>
 );
 

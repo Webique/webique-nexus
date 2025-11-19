@@ -1,28 +1,20 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useFreelancerManagerAuth } from '@/contexts/FreelancerManagerAuthContext';
 import { useDashboardAuth } from '@/contexts/DashboardAuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Lock, AlertCircle } from 'lucide-react';
+import { Lock, AlertCircle, User } from 'lucide-react';
 
-export function FreelancerManagerLogin() {
+export function DashboardLogin() {
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useFreelancerManagerAuth();
-  const { isAuthenticated: isDashboardAuthenticated } = useDashboardAuth();
+  const { login } = useDashboardAuth();
   const navigate = useNavigate();
-
-  // If dashboard user is authenticated, automatically redirect to Freelancer Manager portal
-  useEffect(() => {
-    if (isDashboardAuthenticated) {
-      navigate('/freelancer-manager', { replace: true });
-    }
-  }, [isDashboardAuthenticated, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,22 +24,18 @@ export function FreelancerManagerLogin() {
     // Small delay to prevent brute force
     await new Promise(resolve => setTimeout(resolve, 500));
 
-    const success = login(password);
+    const success = login(username, password);
     
     if (success) {
-      navigate('/freelancer-manager');
+      navigate('/');
     } else {
-      setError('Invalid password. Please try again.');
+      setError('Invalid username or password. Please try again.');
+      setUsername('');
       setPassword('');
     }
     
     setIsLoading(false);
   };
-
-  // Don't render login form if dashboard user is authenticated (will redirect)
-  if (isDashboardAuthenticated) {
-    return null;
-  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted p-4">
@@ -56,28 +44,50 @@ export function FreelancerManagerLogin() {
           <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
             <Lock className="w-8 h-8 text-primary" />
           </div>
-          <CardTitle className="text-2xl font-bold">Freelancer Manager</CardTitle>
+          <CardTitle className="text-2xl font-bold">Dashboard Login</CardTitle>
           <CardDescription>
-            Enter your password to access freelancer projects
+            Enter your credentials to access the dashboard
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
+              <Label htmlFor="username">Username</Label>
+              <div className="relative">
+                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  id="username"
+                  type="text"
+                  value={username}
+                  onChange={(e) => {
+                    setUsername(e.target.value);
+                    setError('');
+                  }}
+                  placeholder="Enter username"
+                  disabled={isLoading}
+                  className="h-11 pl-10"
+                  autoFocus
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => {
-                  setPassword(e.target.value);
-                  setError('');
-                }}
-                placeholder="Enter password"
-                disabled={isLoading}
-                className="h-11"
-                autoFocus
-              />
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    setError('');
+                  }}
+                  placeholder="Enter password"
+                  disabled={isLoading}
+                  className="h-11 pl-10"
+                />
+              </div>
             </div>
 
             {error && (
@@ -90,10 +100,14 @@ export function FreelancerManagerLogin() {
             <Button
               type="submit"
               className="w-full h-11 bg-gradient-primary hover:shadow-bronze transition-all duration-300"
-              disabled={isLoading || !password}
+              disabled={isLoading || !username || !password}
             >
               {isLoading ? 'Verifying...' : 'Login'}
             </Button>
+
+            <div className="text-center text-xs text-muted-foreground pt-2">
+              <p>Session expires when you close the browser tab</p>
+            </div>
           </form>
         </CardContent>
       </Card>
