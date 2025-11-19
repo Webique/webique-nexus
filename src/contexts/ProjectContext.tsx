@@ -58,6 +58,7 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
     additionalCostReason: doc.additionalCostReason,
     freelancerManagerFees: doc.freelancerManagerFees,
     freelancerFees: doc.freelancerFees,
+    freelancer: doc.freelancer,
     label: doc.label,
     status: doc.status,
     createdAt: doc.createdAt || new Date().toISOString(),

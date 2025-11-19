@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
-import { ExternalLink, CheckCircle, Eye } from "lucide-react";
+import { ExternalLink, CheckCircle, Eye, Plus, Edit } from "lucide-react";
 import { useProjects } from "@/contexts/ProjectContext";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectTrigger, SelectContent, SelectValue, SelectItem } from "@/components/ui/select";
@@ -13,15 +14,27 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ProjectDetailsDialog } from "@/components/projects/ProjectDetailsDialog";
+import { AddFreelancerProjectDialog } from "@/components/freelancer-manager/AddFreelancerProjectDialog";
+import { EditNotesDialog } from "@/components/freelancer-manager/EditNotesDialog";
 import { Project } from "@/types/project";
 
 const FreelancerManager = () => {
+  // NOTE: Freelancer Manager has LIMITED access:
+  // - Can only view Freelancer projects
+  // - Can add new Freelancer projects
+  // - Can edit notes on Freelancer projects ONLY
+  // - CANNOT delete projects
+  // - CANNOT edit amountReceived
+  // - CANNOT mark projects as completed
+  
   const { projects } = useProjects();
   const [viewingProject, setViewingProject] = useState<Project | null>(null);
+  const [editingNotes, setEditingNotes] = useState<Project | null>(null);
+  const [showAddDialog, setShowAddDialog] = useState(false);
   const [activeSortOrder, setActiveSortOrder] = useState<'desc' | 'asc'>('desc');
   const [completedSortOrder, setCompletedSortOrder] = useState<'desc' | 'asc'>('desc');
 
-  // Filter only Freelancer projects
+  // Filter only Freelancer projects - security: Freelancer Manager can only see Freelancer projects
   const freelancerProjects = useMemo(() => {
     return projects.filter(project => project.label === 'Freelancer');
   }, [projects]);
@@ -80,11 +93,20 @@ const FreelancerManager = () => {
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">Freelancer Projects</h1>
-        <p className="text-muted-foreground mt-1">
-          View active and completed freelancer projects
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">Freelancer Projects</h1>
+          <p className="text-muted-foreground mt-1">
+            View active and completed freelancer projects
+          </p>
+        </div>
+        <Button 
+          onClick={() => setShowAddDialog(true)}
+          className="bg-gradient-primary hover:shadow-bronze transition-all duration-300"
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          Add Project
+        </Button>
       </div>
 
       {/* Statistics */}
@@ -167,6 +189,7 @@ const FreelancerManager = () => {
                       <TableRow>
                         <TableHead>Project Name</TableHead>
                         <TableHead>Phone Number</TableHead>
+                        <TableHead>Freelancer</TableHead>
                         <TableHead>Instagram</TableHead>
                         <TableHead>Website</TableHead>
                         <TableHead>Total Amount</TableHead>
@@ -182,6 +205,7 @@ const FreelancerManager = () => {
                           <TableRow key={project.id} className="hover:bg-muted/50 transition-colors">
                             <TableCell className="font-medium">{project.name}</TableCell>
                             <TableCell>{project.phoneNumber}</TableCell>
+                            <TableCell>{project.freelancer || '-'}</TableCell>
                             <TableCell>
                               {project.instagram && (
                                 <a
@@ -218,6 +242,13 @@ const FreelancerManager = () => {
                             </TableCell>
                             <TableCell>
                               <div className="flex items-center justify-end gap-2">
+                                <button
+                                  onClick={() => setEditingNotes(project)}
+                                  className="p-2 hover:bg-muted rounded-md transition-colors"
+                                  title="Edit Notes"
+                                >
+                                  <Edit className="w-4 h-4" />
+                                </button>
                                 <button
                                   onClick={() => setViewingProject(project)}
                                   className="p-2 hover:bg-muted rounded-md transition-colors"
@@ -270,6 +301,7 @@ const FreelancerManager = () => {
                       <TableRow>
                         <TableHead>Project Name</TableHead>
                         <TableHead>Phone Number</TableHead>
+                        <TableHead>Freelancer</TableHead>
                         <TableHead>Instagram</TableHead>
                         <TableHead>Website</TableHead>
                         <TableHead>Total Amount</TableHead>
@@ -285,6 +317,7 @@ const FreelancerManager = () => {
                         <TableRow key={project.id} className="hover:bg-muted/50 transition-colors">
                           <TableCell className="font-medium">{project.name}</TableCell>
                           <TableCell>{project.phoneNumber}</TableCell>
+                          <TableCell>{project.freelancer || '-'}</TableCell>
                           <TableCell>
                             {project.instagram && (
                               <a
@@ -323,6 +356,13 @@ const FreelancerManager = () => {
                           <TableCell>
                             <div className="flex items-center justify-end gap-2">
                               <button
+                                onClick={() => setEditingNotes(project)}
+                                className="p-2 hover:bg-muted rounded-md transition-colors"
+                                title="Edit Notes"
+                              >
+                                <Edit className="w-4 h-4" />
+                              </button>
+                              <button
                                 onClick={() => setViewingProject(project)}
                                 className="p-2 hover:bg-muted rounded-md transition-colors"
                                 title="View Details"
@@ -341,6 +381,20 @@ const FreelancerManager = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Dialogs */}
+      <AddFreelancerProjectDialog
+        open={showAddDialog}
+        onOpenChange={setShowAddDialog}
+      />
+
+      {editingNotes && (
+        <EditNotesDialog
+          project={editingNotes}
+          open={!!editingNotes}
+          onOpenChange={(open) => !open && setEditingNotes(null)}
+        />
+      )}
 
       {/* Project Details Dialog */}
       {viewingProject && (

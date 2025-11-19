@@ -14,6 +14,7 @@ export interface Project {
   additionalCostReason?: string;
   freelancerManagerFees?: number;
   freelancerFees?: number;
+  freelancer?: string;
   label?: 'In-House' | 'Freelancer';
   status: 'active' | 'completed';
   createdAt: string;

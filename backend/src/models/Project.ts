@@ -15,6 +15,7 @@ export interface IProject extends Document {
   additionalCostReason?: string;
   freelancerManagerFees?: number;
   freelancerFees?: number;
+  freelancer?: string;
   label?: 'In-House' | 'Freelancer';
   status: 'active' | 'completed';
   createdAt: Date;
@@ -83,6 +84,11 @@ const ProjectSchema = new Schema<IProject>({
   freelancerFees: {
     type: Number,
     min: [0, 'Freelancer fees cannot be negative']
+  },
+  freelancer: {
+    type: String,
+    trim: true,
+    maxlength: [100, 'Freelancer name cannot exceed 100 characters']
   },
   label: {
     type: String,

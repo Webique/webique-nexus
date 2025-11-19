@@ -41,6 +41,7 @@ const projectSchema = z.object({
   additionalCostReason: z.string().optional(),
   freelancerManagerFees: z.number().min(0).optional(),
   freelancerFees: z.number().min(0).optional(),
+  freelancer: z.string().optional(),
   label: z.enum(['In-House', 'Freelancer']).optional(),
 });
 
@@ -78,6 +79,7 @@ export function AddProjectDialog({ open, onOpenChange }: AddProjectDialogProps) 
       additionalCostReason: "",
       freelancerManagerFees: undefined,
       freelancerFees: undefined,
+      freelancer: undefined,
       label: undefined,
     },
   });
@@ -113,6 +115,7 @@ export function AddProjectDialog({ open, onOpenChange }: AddProjectDialogProps) 
         additionalCostReason: data.additionalCostReason || "",
         freelancerManagerFees: freelancerManagerFees,
         freelancerFees: freelancerFees,
+        freelancer: data.freelancer,
         label: data.label,
         status: 'active' as const,
       };
@@ -429,6 +432,24 @@ export function AddProjectDialog({ open, onOpenChange }: AddProjectDialogProps) 
                       <SelectItem value="Freelancer">Freelancer</SelectItem>
                     </SelectContent>
                   </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="freelancer"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Freelancer Name (Optional)</FormLabel>
+                  <FormControl>
+                    <Input 
+                      {...field} 
+                      className="bg-input" 
+                      placeholder="Enter freelancer name"
+                    />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
