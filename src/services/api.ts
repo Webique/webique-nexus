@@ -60,12 +60,14 @@ export class ApiService {
     search?: string;
     page?: number;
     limit?: number;
+    label?: string;
   }) {
     const searchParams = new URLSearchParams();
     if (params?.status) searchParams.append('status', params.status);
     if (params?.search) searchParams.append('search', params.search);
     if (params?.page) searchParams.append('page', params.page.toString());
     if (params?.limit) searchParams.append('limit', params.limit.toString());
+    if (params?.label) searchParams.append('label', params.label);
     
     const queryString = searchParams.toString();
     return this.request(`/api/projects${queryString ? `?${queryString}` : ''}`);

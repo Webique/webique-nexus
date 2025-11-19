@@ -6,12 +6,16 @@ const router = express.Router();
 // GET /api/projects - Get all projects
 router.get('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { status, search, page = 1, limit = 10 } = req.query;
+    const { status, search, page = 1, limit = 10, label } = req.query;
     
     let query: any = {};
     
     if (status) {
       query.status = status;
+    }
+    
+    if (label) {
+      query.label = label;
     }
     
     if (search) {

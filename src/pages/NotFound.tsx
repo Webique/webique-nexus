@@ -1,12 +1,25 @@
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
+import { useFreelancerManagerAuth } from "@/contexts/FreelancerManagerAuthContext";
 
 const NotFound = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { isFreelancerManager } = useFreelancerManagerAuth();
 
   useEffect(() => {
     console.error("404 Error: User attempted to access non-existent route:", location.pathname);
-  }, [location.pathname]);
+    
+    // If Freelancer Manager, redirect to their portal
+    if (isFreelancerManager) {
+      navigate("/freelancer-manager", { replace: true });
+    }
+  }, [location.pathname, isFreelancerManager, navigate]);
+
+  // Don't render if Freelancer Manager (will redirect)
+  if (isFreelancerManager) {
+    return null;
+  }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-100">

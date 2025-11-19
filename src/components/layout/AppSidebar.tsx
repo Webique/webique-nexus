@@ -1,4 +1,5 @@
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 import { 
   BarChart3, 
   Calculator,
@@ -19,6 +20,7 @@ import {
   SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { useFreelancerManagerAuth } from "@/contexts/FreelancerManagerAuthContext";
 
 const navigationItems = [
   { 
@@ -56,8 +58,22 @@ const navigationItems = [
 export function AppSidebar() {
   const { state } = useSidebar();
   const location = useLocation();
+  const navigate = useNavigate();
+  const { isFreelancerManager } = useFreelancerManagerAuth();
   const currentPath = location.pathname;
   const collapsed = state === "collapsed";
+
+  // Security check - redirect Freelancer Manager if they somehow access sidebar
+  useEffect(() => {
+    if (isFreelancerManager) {
+      navigate("/freelancer-manager", { replace: true });
+    }
+  }, [isFreelancerManager, navigate]);
+
+  // Don't render sidebar if Freelancer Manager
+  if (isFreelancerManager) {
+    return null;
+  }
 
   const isActive = (path: string) => currentPath === path;
 
